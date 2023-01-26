@@ -49,3 +49,9 @@ class ModuleInstance extends InstanceBase {
 }
 
 runEntrypoint(ModuleInstance, UpgradeScripts)
+
+
+/**
+ * usefull for developing
+ * for yearn and powershell https://bobbyhadz.com/blog/yarn-cannot-be-loaded-running-scripts-disabled 
+ */

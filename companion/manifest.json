@@ -1,16 +1,16 @@
 {
-	"id": "your-module-name",
-	"name": "your-module-name",
-	"shortname": "module-shortname",
-	"description": "A short one line description of your module",
-	"version": "0.0.0",
+	"id": "rgblink-vsp628pro",
+	"name": "rgblink-vsp628pro",
+	"shortname": "VSP 628pro",
+	"description": "TODO",
+	"version": "1.0.0",
 	"license": "MIT",
-	"repository": "git+https://github.com/bitfocus/companion-module-your-module-name.git",
-	"bugs": "https://github.com/bitfocus/companion-module-your-module-name/issues",
+	"repository": "git+https://github.com/bitfocus/companion-module-rgblink-vsp628pro.git",
+	"bugs": "https://github.com/bitfocus/companion-module-rgblink-vsp628pro/issues",
 	"maintainers": [
 		{
-			"name": "Your name",
-			"email": "Your email"
+			"name": "Marcin Gumułka",
+			"email": "marcingum@gmail.com"
 		}
 	],
 	"runtime": {
@@ -20,7 +20,7 @@
 		"entrypoint": "../main.js"
 	},
 	"legacyIds": [],
-	"manufacturer": "Your company",
-	"products": ["Your product"],
+	"manufacturer": "RGBlink",
+	"products": ["VSP 628pro"],
 	"keywords": []
 }
