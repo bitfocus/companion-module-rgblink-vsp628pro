@@ -1,53 +1,12 @@
-const { InstanceBase, Regex, runEntrypoint, InstanceStatus, combineRgb } = require('@companion-module/base')
+const { InstanceBase, Regex, runEntrypoint, InstanceStatus } = require('@companion-module/base')
 const UpgradeScripts = require('./upgrades')
-const { RGBLinkVSP628ProConnector, FRONT_PANEL_LOCKED, FRONT_PANEL_UNLOCKED } = require('./rgblink_vsp628pro_connector')
+const { RGBLinkVSP628ProConnector } = require('./rgblink_vsp628pro_connector')
 
-const ACTION_FRONT_PANEL_LOCK = 'lock'
-const ACTION_FRONT_PANEL_UNLOCK = 'unlock'
-
-const FEEDBACK_FRONT_PANEL_LOCKED = 'locked'
-const FEEDBACK_FRONT_PANEL_UNLOCKED = 'unlocked'
+const FrontPanelManager = require('./managers/FrontPanelManager')
 
 class VSP628ProModuleInstance extends InstanceBase {
 	apiConnector = new RGBLinkVSP628ProConnector()
-	colorsSingle = {
-		WHITE: combineRgb(255, 255, 255),
-		BLACK: combineRgb(0, 0, 0),
-		RED: combineRgb(255, 0, 0),
-		GREEN: combineRgb(0, 204, 0),
-		YELLOW: combineRgb(255, 255, 0),
-		BLUE: combineRgb(0, 51, 204),
-		PURPLE: combineRgb(255, 0, 255),
-	}
-	colorsComb = {
-		// https://github.com/bitfocus/companion-module-base/wiki/Presets
-		// Standard Colors
-		// RED	255,0,0	White text	STOP,HALT,BREAK,KILL and similar terminating functions + Active program on switchers
-		RED_BACKGROUND_WITH_WHITE_TEXT: {
-			bgcolor: this.colorsSingle.RED,
-			color: this.colorsSingle.WHITE,
-		},
-		// GREEN	0,204,0	White text	TAKE,GO,PLAY, and similar starting functions. + Active Preview on switchers
-		GREEN_BACKGROUND_WITH_WHITE_TEXT: {
-			bgcolor: this.colorsSingle.GREEN,
-			color: this.colorsSingle.WHITE,
-		},
-		// YELLOW	255,255,0	Black text	PAUSE,HOLD,WAIT and similar holding functions + active Keyer on switchers
-		YELLOW_BACKGROUND_WITH_BLACK_TEXT: {
-			bgcolor: this.colorsSingle.YELLOW,
-			color: this.colorsSingle.BLACK,
-		},
-		// BLUE	0,51,204	White text	Active AUX on switchers
-		BLUE_BACKGROUND_WITH_WHITE_TEXT: {
-			bgcolor: this.colorsSingle.BLUE,
-			color: this.colorsSingle.WHITE,
-		},
-		// PURPLE	255,0,255	White text	Presets that need user configuration after they have been draged onto a button
-		PURPLE_BACKGROUND_WITH_WHITE_TEXT: {
-			bgcolor: this.colorsSingle.PURPLE,
-			color: this.colorsSingle.WHITE,
-		},
-	}
+	managers = []
 
 	constructor(internal) {
 		super(internal)
@@ -59,6 +18,7 @@ class VSP628ProModuleInstance extends InstanceBase {
 		try {
 			this.log('debug', 'RGBlink VSP628PRO: init...')
 			this.initApiConnector()
+			this.managers.push(new FrontPanelManager(this))
 			this.updateActions()
 			this.updateFeedbacks()
 			this.updatePresets()
@@ -107,52 +67,16 @@ class VSP628ProModuleInstance extends InstanceBase {
 
 	updateActions() {
 		let actions = {}
-
-		actions[ACTION_FRONT_PANEL_LOCK] = {
-			name: 'Lock front panel',
-			options: [],
-			callback: async (/*event*/) => {
-				this.apiConnector.sendSetFrontPanelLockStatus(FRONT_PANEL_LOCKED)
-			},
+		for (var i = 0; i < this.managers.length; i++) {
+			actions = { ...actions, ...this.managers[i].getActions() }
 		}
-
-		actions[ACTION_FRONT_PANEL_UNLOCK] = {
-			name: 'Unlock front panel',
-			options: [],
-			callback: async (/*event*/) => {
-				this.apiConnector.sendSetFrontPanelLockStatus(FRONT_PANEL_UNLOCKED)
-			},
-		}
-
 		this.setActionDefinitions(actions)
 	}
 
 	updateFeedbacks() {
 		let feedbacks = {}
-
-		let module = this
-
-		feedbacks[FEEDBACK_FRONT_PANEL_LOCKED] = {
-			type: 'boolean',
-			name: 'Front panel is locked',
-			defaultStyle: this.colorsComb.YELLOW_BACKGROUND_WITH_BLACK_TEXT,
-			// options is how the user can choose the condition the feedback activates for
-			options: [],
-			callback: (/*feedback*/) => {
-				module.log('debug', 'checking feedback for locked...')
-				return module.apiConnector.deviceStatus.frontPanelLocked == FRONT_PANEL_LOCKED
-			},
-		}
-		feedbacks[FEEDBACK_FRONT_PANEL_UNLOCKED] = {
-			type: 'boolean',
-			name: 'Front panel is unlocked',
-			defaultStyle: this.colorsComb.GREEN_BACKGROUND_WITH_WHITE_TEXT,
-			// options is how the user can choose the condition the feedback activates for
-			options: [],
-			callback: (/*feedback*/) => {
-				module.log('debug', 'checking feedback for unlocked...')
-				return module.apiConnector.deviceStatus.frontPanelLocked == FRONT_PANEL_UNLOCKED
-			},
+		for (var i = 0; i < this.managers.length; i++) {
+			feedbacks = { ...feedbacks, ...this.managers[i].getFeedbacks() }
 		}
 
 		this.setFeedbackDefinitions(feedbacks)
@@ -160,65 +84,9 @@ class VSP628ProModuleInstance extends InstanceBase {
 
 	updatePresets() {
 		let presets = []
-
-		presets.push({
-			type: 'button',
-			category: 'Front panel',
-			name: `Lock front panel`, // A name for the preset. Shown to the user when they hover over it
-			style: {
-				text: 'Lock front panel',
-				size: 'auto',
-				color: this.colorsSingle.WHITE,
-				bgcolor: this.colorsSingle.BLACK,
-			},
-			steps: [
-				{
-					down: [
-						{
-							actionId: ACTION_FRONT_PANEL_LOCK,
-							options: {},
-						},
-					],
-					up: [],
-				},
-			],
-			feedbacks: [
-				{
-					feedbackId: FEEDBACK_FRONT_PANEL_LOCKED,
-					options: {},
-					style: this.colorsComb.YELLOW_BACKGROUND_WITH_BLACK_TEXT,
-				},
-			],
-		})
-		presets.push({
-			type: 'button',
-			category: 'Front panel',
-			name: 'Unlock front panel', // A name for the preset. Shown to the user when they hover over it
-			style: {
-				text: 'Unlock front panel',
-				size: 'auto',
-				color: this.colorsSingle.WHITE,
-				bgcolor: this.colorsSingle.BLACK,
-			},
-			steps: [
-				{
-					down: [
-						{
-							actionId: ACTION_FRONT_PANEL_UNLOCK,
-							options: [],
-						},
-					],
-					up: [],
-				},
-			],
-			feedbacks: [
-				{
-					feedbackId: FEEDBACK_FRONT_PANEL_UNLOCKED,
-					options: {},
-					style: this.colorsComb.GREEN_BACKGROUND_WITH_WHITE_TEXT,
-				},
-			],
-		})
+		for (var i = 0; i < this.managers.length; i++) {
+			presets = { ...presets, ...this.managers[i].getPresets() }
+		}
 
 		this.setPresetDefinitions(presets)
 	}
@@ -245,8 +113,14 @@ class VSP628ProModuleInstance extends InstanceBase {
 	}
 
 	checkAllFeedbacks() {
-		this.checkFeedbacks(FEEDBACK_FRONT_PANEL_LOCKED)
-		this.checkFeedbacks(FEEDBACK_FRONT_PANEL_UNLOCKED)
+		let feedbacknames = []
+		for (let i = 0; i < this.managers.length; i++) {
+			feedbacknames = feedbacknames.concat(this.managers[i].getFeedbacksNames())
+		}
+
+		for (let i = 0; i < feedbacknames.length; i++) {
+			this.checkFeedbacks(feedbacknames[i])
+		}
 	}
 }
 
