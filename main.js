@@ -1,4 +1,4 @@
-const { InstanceBase, Regex, runEntrypoint, InstanceStatus } = require('@companion-module/base')
+const { InstanceBase, Regex, runEntrypoint, InstanceStatus, combineRgb } = require('@companion-module/base')
 const UpgradeScripts = require('./upgrades')
 const { RGBLinkVSP628ProConnector,
 	FRONT_PANEL_LOCKED,
@@ -7,8 +7,12 @@ const { RGBLinkVSP628ProConnector,
 const ACTION_FRONT_PANEL_LOCK = 'lock';
 const ACTION_FRONT_PANEL_UNLOCK = 'unlock';
 
-class ModuleInstance extends InstanceBase {
+const FEEDBACK_FRONT_PANEL_LOCKED = 'locked';
+const FEEDBACK_FRONT_PANEL_UNLOCKED = 'unlocked';
+
+class VSP628ProModuleInstance extends InstanceBase {
 	apiConnector = new RGBLinkVSP628ProConnector();
+	feedbacks = {}
 
 	constructor(internal) {
 		super(internal)
@@ -21,6 +25,8 @@ class ModuleInstance extends InstanceBase {
 			this.log('debug', "RGBlink VSP628PRO: init...")
 			this.initApiConnector();
 			this.updateActions()
+			this.updateFeedbacks()
+			this.updatePresets()
 			this.log('debug', "RGBlink VSP628PRO: init finished")
 		} catch (ex) {
 			this.updateStatus(InstanceStatus.UnknownError, ex);
@@ -86,6 +92,111 @@ class ModuleInstance extends InstanceBase {
 		this.setActionDefinitions(actions);
 	}
 
+	updateFeedbacks() {
+		this.feedbacks = {};
+
+		let module = this;
+
+		this.feedbacks[FEEDBACK_FRONT_PANEL_LOCKED] = {
+			type: 'boolean',
+			name: 'Front panel is locked',
+			defaultStyle: {
+				bgcolor: combineRgb(255, 255, 0),
+				color: combineRgb(0, 0, 0),
+			},
+			// options is how the user can choose the condition the feedback activates for
+			options: [],
+			callback: (/*feedback*/) => {
+				module.log('debug', 'checking feedback for locked...')
+				return module.apiConnector.deviceStatus.frontPanelLocked == FRONT_PANEL_LOCKED;
+			}
+		}
+		this.feedbacks[FEEDBACK_FRONT_PANEL_UNLOCKED] = {
+			type: 'boolean',
+			name: 'Front panel is unlocked',
+			defaultStyle: {
+				bgcolor: combineRgb(0, 204, 0),
+				color: combineRgb(255, 255, 255),
+			},
+			// options is how the user can choose the condition the feedback activates for
+			options: [],
+			callback: (/*feedback*/) => {
+				module.log('debug', 'checking feedback for unlocked...')
+				return module.apiConnector.deviceStatus.frontPanelLocked == FRONT_PANEL_UNLOCKED;
+			}
+		}
+
+		this.setFeedbackDefinitions(this.feedbacks);
+	}
+
+	updatePresets() {
+		let presets = [];
+
+		presets.push({
+			type: 'button',
+			category: 'Front panel',
+			name: `Lock front panel`, // A name for the preset. Shown to the user when they hover over it
+			style: {
+				text: 'Lock front panel',
+				size: 'auto',
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(0, 0, 0),
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: ACTION_FRONT_PANEL_LOCK,
+							options: {
+							},
+						},
+					],
+					up: [],
+				},
+			],
+			feedbacks: [{
+				feedbackId: FEEDBACK_FRONT_PANEL_LOCKED,
+				options:{},
+				style:{
+					bgcolor: combineRgb(255, 255, 0),
+					color: combineRgb(0, 0, 0),					
+				}
+			}],
+		});
+		presets.push({
+			type: 'button',
+			category: 'Front panel',
+			name: 'Unlock front panel', // A name for the preset. Shown to the user when they hover over it
+			style: {
+				text: 'Unlock front panel',
+				size: 'auto',
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(0, 0, 0),
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: ACTION_FRONT_PANEL_UNLOCK,
+							options: [],
+						},
+					],
+					up: [],
+				},
+			],
+			feedbacks: [{
+				feedbackId: FEEDBACK_FRONT_PANEL_UNLOCKED,
+				options:{},
+				style:{
+					bgcolor: combineRgb(0, 204, 0),
+					color: combineRgb(255,255,255),					
+				}
+			}],
+		});		
+
+		this.setPresetDefinitions(presets)
+	}
+
 
 	initApiConnector() {
 		let self = this
@@ -111,9 +222,14 @@ class ModuleInstance extends InstanceBase {
 		this.apiConnector.sendConnectMessage()
 		this.apiConnector.askAboutStatus()
 	}
+
+	checkAllFeedbacks() {
+		this.checkFeedbacks(FEEDBACK_FRONT_PANEL_LOCKED)
+		this.checkFeedbacks(FEEDBACK_FRONT_PANEL_UNLOCKED)
+	}
 }
 
-runEntrypoint(ModuleInstance, UpgradeScripts)
+runEntrypoint(VSP628ProModuleInstance, UpgradeScripts)
 
 
 /**
