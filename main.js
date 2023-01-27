@@ -10,7 +10,44 @@ const FEEDBACK_FRONT_PANEL_UNLOCKED = 'unlocked'
 
 class VSP628ProModuleInstance extends InstanceBase {
 	apiConnector = new RGBLinkVSP628ProConnector()
-	feedbacks = {}
+	colorsSingle = {
+		WHITE: combineRgb(255, 255, 255),
+		BLACK: combineRgb(0, 0, 0),
+		RED: combineRgb(255, 0, 0),
+		GREEN: combineRgb(0, 204, 0),
+		YELLOW: combineRgb(255, 255, 0),
+		BLUE: combineRgb(0, 51, 204),
+		PURPLE: combineRgb(255, 0, 255),
+	}
+	colorsComb = {
+		// https://github.com/bitfocus/companion-module-base/wiki/Presets
+		// Standard Colors
+		// RED	255,0,0	White text	STOP,HALT,BREAK,KILL and similar terminating functions + Active program on switchers
+		RED_BACKGROUND_WITH_WHITE_TEXT: {
+			bgcolor: this.colorsSingle.RED,
+			color: this.colorsSingle.WHITE,
+		},
+		// GREEN	0,204,0	White text	TAKE,GO,PLAY, and similar starting functions. + Active Preview on switchers
+		GREEN_BACKGROUND_WITH_WHITE_TEXT: {
+			bgcolor: this.colorsSingle.GREEN,
+			color: this.colorsSingle.WHITE,
+		},
+		// YELLOW	255,255,0	Black text	PAUSE,HOLD,WAIT and similar holding functions + active Keyer on switchers
+		YELLOW_BACKGROUND_WITH_BLACK_TEXT: {
+			bgcolor: this.colorsSingle.YELLOW,
+			color: this.colorsSingle.BLACK,
+		},
+		// BLUE	0,51,204	White text	Active AUX on switchers
+		BLUE_BACKGROUND_WITH_WHITE_TEXT: {
+			bgcolor: this.colorsSingle.BLUE,
+			color: this.colorsSingle.WHITE,
+		},
+		// PURPLE	255,0,255	White text	Presets that need user configuration after they have been draged onto a button
+		PURPLE_BACKGROUND_WITH_WHITE_TEXT: {
+			bgcolor: this.colorsSingle.PURPLE,
+			color: this.colorsSingle.WHITE,
+		},
+	}
 
 	constructor(internal) {
 		super(internal)
@@ -91,17 +128,14 @@ class VSP628ProModuleInstance extends InstanceBase {
 	}
 
 	updateFeedbacks() {
-		this.feedbacks = {}
+		let feedbacks = {}
 
 		let module = this
 
-		this.feedbacks[FEEDBACK_FRONT_PANEL_LOCKED] = {
+		feedbacks[FEEDBACK_FRONT_PANEL_LOCKED] = {
 			type: 'boolean',
 			name: 'Front panel is locked',
-			defaultStyle: {
-				bgcolor: combineRgb(255, 255, 0),
-				color: combineRgb(0, 0, 0),
-			},
+			defaultStyle: this.colorsComb.YELLOW_BACKGROUND_WITH_BLACK_TEXT,
 			// options is how the user can choose the condition the feedback activates for
 			options: [],
 			callback: (/*feedback*/) => {
@@ -109,13 +143,10 @@ class VSP628ProModuleInstance extends InstanceBase {
 				return module.apiConnector.deviceStatus.frontPanelLocked == FRONT_PANEL_LOCKED
 			},
 		}
-		this.feedbacks[FEEDBACK_FRONT_PANEL_UNLOCKED] = {
+		feedbacks[FEEDBACK_FRONT_PANEL_UNLOCKED] = {
 			type: 'boolean',
 			name: 'Front panel is unlocked',
-			defaultStyle: {
-				bgcolor: combineRgb(0, 204, 0),
-				color: combineRgb(255, 255, 255),
-			},
+			defaultStyle: this.colorsComb.GREEN_BACKGROUND_WITH_WHITE_TEXT,
 			// options is how the user can choose the condition the feedback activates for
 			options: [],
 			callback: (/*feedback*/) => {
@@ -124,7 +155,7 @@ class VSP628ProModuleInstance extends InstanceBase {
 			},
 		}
 
-		this.setFeedbackDefinitions(this.feedbacks)
+		this.setFeedbackDefinitions(feedbacks)
 	}
 
 	updatePresets() {
@@ -137,8 +168,8 @@ class VSP628ProModuleInstance extends InstanceBase {
 			style: {
 				text: 'Lock front panel',
 				size: 'auto',
-				color: combineRgb(255, 255, 255),
-				bgcolor: combineRgb(0, 0, 0),
+				color: this.colorsSingle.WHITE,
+				bgcolor: this.colorsSingle.BLACK,
 			},
 			steps: [
 				{
@@ -155,10 +186,7 @@ class VSP628ProModuleInstance extends InstanceBase {
 				{
 					feedbackId: FEEDBACK_FRONT_PANEL_LOCKED,
 					options: {},
-					style: {
-						bgcolor: combineRgb(255, 255, 0),
-						color: combineRgb(0, 0, 0),
-					},
+					style: this.colorsComb.YELLOW_BACKGROUND_WITH_BLACK_TEXT,
 				},
 			],
 		})
@@ -169,8 +197,8 @@ class VSP628ProModuleInstance extends InstanceBase {
 			style: {
 				text: 'Unlock front panel',
 				size: 'auto',
-				color: combineRgb(255, 255, 255),
-				bgcolor: combineRgb(0, 0, 0),
+				color: this.colorsSingle.WHITE,
+				bgcolor: this.colorsSingle.BLACK,
 			},
 			steps: [
 				{
@@ -187,10 +215,7 @@ class VSP628ProModuleInstance extends InstanceBase {
 				{
 					feedbackId: FEEDBACK_FRONT_PANEL_UNLOCKED,
 					options: {},
-					style: {
-						bgcolor: combineRgb(0, 204, 0),
-						color: combineRgb(255, 255, 255),
-					},
+					style: this.colorsComb.GREEN_BACKGROUND_WITH_WHITE_TEXT,
 				},
 			],
 		})
