@@ -52,7 +52,6 @@ class RGBLinkApiConnector {
 		} catch (ex) {
 			console.log(ex) // is it log anything?
 		}
-
 	}
 
 	onEveryOneSecond() {
@@ -66,19 +65,19 @@ class RGBLinkApiConnector {
 			var sentDate = new Date().getTime()
 			var self = this
 
-				; (function (sentDate2) {
-					setTimeout(function () {
-						if (self.config.polling) {
-							if (typeof self.lastDataReceivedTime === 'undefined' || self.lastDataReceivedTime < sentDate2) {
-								let lastReceiveOrStart = self.lastDataReceivedTime || self.createTime
-								self.emit(
-									self.EVENT_NAME_ON_CONNECTION_WARNING,
-									'The device has not sent any data since ' + new Date(lastReceiveOrStart).toLocaleTimeString()
-								)
-							}
+			;(function (sentDate2) {
+				setTimeout(function () {
+					if (self.config.polling) {
+						if (typeof self.lastDataReceivedTime === 'undefined' || self.lastDataReceivedTime < sentDate2) {
+							let lastReceiveOrStart = self.lastDataReceivedTime || self.createTime
+							self.emit(
+								self.EVENT_NAME_ON_CONNECTION_WARNING,
+								'The device has not sent any data since ' + new Date(lastReceiveOrStart).toLocaleTimeString()
+							)
 						}
-					}, 2000)
-				})(sentDate)
+					}
+				}, 2000)
+			})(sentDate)
 		} catch (ex) {
 			this.myLog(ex)
 		}
@@ -154,11 +153,13 @@ class RGBLinkApiConnector {
 	}
 
 	sendCommandNative(cmd) {
-		let self = this;
+		let self = this
 		try {
 			if (cmd !== undefined && cmd != '') {
 				if (this.socket !== undefined) {
-					this.socket.send(cmd).then(function () { self.myLog("sent?") });
+					this.socket.send(cmd).then(function () {
+						self.myLog('sent?')
+					})
 					this.myLog('SENT    : ' + cmd)
 					this.lastDataSentTime = new Date().getTime()
 					this.onAfterDataSent()
@@ -208,7 +209,7 @@ class RGBLinkApiConnector {
 	}
 
 	validateReceivedDataAndEmitIfValid(message) {
-		this.myLog("before validate");
+		this.myLog('before validate')
 
 		let redeableMsg = message.toString('utf8').toUpperCase()
 
@@ -239,7 +240,7 @@ class RGBLinkApiConnector {
 		}
 		// end of validate section
 
-		this.myLog("before emit");
+		this.myLog('before emit')
 		this.emit(this.EVENT_NAME_ON_DATA_API, [ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4])
 	}
 

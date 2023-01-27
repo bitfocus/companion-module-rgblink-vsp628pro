@@ -2,7 +2,7 @@ const RGBLinkApiConnector = require('./rgblinkapiconnector')
 
 const FRONT_PANEL_LOCKED = '01'
 const FRONT_PANEL_UNLOCKED = '00'
-const FRONT_PANEL_NAMES = [];
+const FRONT_PANEL_NAMES = []
 FRONT_PANEL_NAMES[FRONT_PANEL_LOCKED] = 'Locked'
 FRONT_PANEL_NAMES[FRONT_PANEL_UNLOCKED] = 'Unlocked'
 
@@ -37,7 +37,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 
 	askAboutStatus() {
 		//this.sendCommand('78', '02', '00', '00', '00') // 3.2.20 Read the master and secondary channel
-
 		// THIS NOT WORK, it closes graph?
 		//this.sendCommand('C7', '01' /*read*/, '00', '00', '00') // 3.2.44 Waveform diagram, vector diagram, and histogram:
 	}
@@ -51,20 +50,19 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 	}
 
 	isLockStatusValid(lock) {
-		return lock == FRONT_PANEL_LOCKED || lock == FRONT_PANEL_UNLOCKED;
+		return lock == FRONT_PANEL_LOCKED || lock == FRONT_PANEL_UNLOCKED
 	}
 
 	consumeFeedback(ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4) {
 		let redeableMsg = [ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4].join(' ')
 		this.myLog(redeableMsg)
 
-
 		if (CMD == '68') {
 			if (DAT1 == '02') {
 				if (this.isLockStatusValid(DAT2)) {
-					this.emitConnectionStatusOK();
-					this.deviceStatus.frontPanelLocked = DAT2;
-					return this.logFeedback(redeableMsg, 'Front panel lock status is ' + FRONT_PANEL_NAMES[DAT2]);
+					this.emitConnectionStatusOK()
+					this.deviceStatus.frontPanelLocked = DAT2
+					return this.logFeedback(redeableMsg, 'Front panel lock status is ' + FRONT_PANEL_NAMES[DAT2])
 				}
 			}
 		}

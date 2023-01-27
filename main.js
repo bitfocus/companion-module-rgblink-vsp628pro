@@ -1,17 +1,15 @@
 const { InstanceBase, Regex, runEntrypoint, InstanceStatus, combineRgb } = require('@companion-module/base')
 const UpgradeScripts = require('./upgrades')
-const { RGBLinkVSP628ProConnector,
-	FRONT_PANEL_LOCKED,
-	FRONT_PANEL_UNLOCKED } = require('./rgblink_vsp628pro_connector')
+const { RGBLinkVSP628ProConnector, FRONT_PANEL_LOCKED, FRONT_PANEL_UNLOCKED } = require('./rgblink_vsp628pro_connector')
 
-const ACTION_FRONT_PANEL_LOCK = 'lock';
-const ACTION_FRONT_PANEL_UNLOCK = 'unlock';
+const ACTION_FRONT_PANEL_LOCK = 'lock'
+const ACTION_FRONT_PANEL_UNLOCK = 'unlock'
 
-const FEEDBACK_FRONT_PANEL_LOCKED = 'locked';
-const FEEDBACK_FRONT_PANEL_UNLOCKED = 'unlocked';
+const FEEDBACK_FRONT_PANEL_LOCKED = 'locked'
+const FEEDBACK_FRONT_PANEL_UNLOCKED = 'unlocked'
 
 class VSP628ProModuleInstance extends InstanceBase {
-	apiConnector = new RGBLinkVSP628ProConnector();
+	apiConnector = new RGBLinkVSP628ProConnector()
 	feedbacks = {}
 
 	constructor(internal) {
@@ -22,16 +20,16 @@ class VSP628ProModuleInstance extends InstanceBase {
 		this.config = config
 
 		try {
-			this.log('debug', "RGBlink VSP628PRO: init...")
-			this.initApiConnector();
+			this.log('debug', 'RGBlink VSP628PRO: init...')
+			this.initApiConnector()
 			this.updateActions()
 			this.updateFeedbacks()
 			this.updatePresets()
-			this.log('debug', "RGBlink VSP628PRO: init finished")
+			this.log('debug', 'RGBlink VSP628PRO: init finished')
 		} catch (ex) {
-			this.updateStatus(InstanceStatus.UnknownError, ex);
+			this.updateStatus(InstanceStatus.UnknownError, ex)
 			console.log(ex)
-			this.log('error', ex);
+			this.log('error', ex)
 		}
 	}
 	// When module gets deleted
@@ -71,7 +69,7 @@ class VSP628ProModuleInstance extends InstanceBase {
 	}
 
 	updateActions() {
-		let actions = {};
+		let actions = {}
 
 		actions[ACTION_FRONT_PANEL_LOCK] = {
 			name: 'Lock front panel',
@@ -79,7 +77,7 @@ class VSP628ProModuleInstance extends InstanceBase {
 			callback: async (/*event*/) => {
 				this.apiConnector.sendSetFrontPanelLockStatus(FRONT_PANEL_LOCKED)
 			},
-		};
+		}
 
 		actions[ACTION_FRONT_PANEL_UNLOCK] = {
 			name: 'Unlock front panel',
@@ -89,13 +87,13 @@ class VSP628ProModuleInstance extends InstanceBase {
 			},
 		}
 
-		this.setActionDefinitions(actions);
+		this.setActionDefinitions(actions)
 	}
 
 	updateFeedbacks() {
-		this.feedbacks = {};
+		this.feedbacks = {}
 
-		let module = this;
+		let module = this
 
 		this.feedbacks[FEEDBACK_FRONT_PANEL_LOCKED] = {
 			type: 'boolean',
@@ -108,8 +106,8 @@ class VSP628ProModuleInstance extends InstanceBase {
 			options: [],
 			callback: (/*feedback*/) => {
 				module.log('debug', 'checking feedback for locked...')
-				return module.apiConnector.deviceStatus.frontPanelLocked == FRONT_PANEL_LOCKED;
-			}
+				return module.apiConnector.deviceStatus.frontPanelLocked == FRONT_PANEL_LOCKED
+			},
 		}
 		this.feedbacks[FEEDBACK_FRONT_PANEL_UNLOCKED] = {
 			type: 'boolean',
@@ -122,15 +120,15 @@ class VSP628ProModuleInstance extends InstanceBase {
 			options: [],
 			callback: (/*feedback*/) => {
 				module.log('debug', 'checking feedback for unlocked...')
-				return module.apiConnector.deviceStatus.frontPanelLocked == FRONT_PANEL_UNLOCKED;
-			}
+				return module.apiConnector.deviceStatus.frontPanelLocked == FRONT_PANEL_UNLOCKED
+			},
 		}
 
-		this.setFeedbackDefinitions(this.feedbacks);
+		this.setFeedbackDefinitions(this.feedbacks)
 	}
 
 	updatePresets() {
-		let presets = [];
+		let presets = []
 
 		presets.push({
 			type: 'button',
@@ -147,22 +145,23 @@ class VSP628ProModuleInstance extends InstanceBase {
 					down: [
 						{
 							actionId: ACTION_FRONT_PANEL_LOCK,
-							options: {
-							},
+							options: {},
 						},
 					],
 					up: [],
 				},
 			],
-			feedbacks: [{
-				feedbackId: FEEDBACK_FRONT_PANEL_LOCKED,
-				options:{},
-				style:{
-					bgcolor: combineRgb(255, 255, 0),
-					color: combineRgb(0, 0, 0),					
-				}
-			}],
-		});
+			feedbacks: [
+				{
+					feedbackId: FEEDBACK_FRONT_PANEL_LOCKED,
+					options: {},
+					style: {
+						bgcolor: combineRgb(255, 255, 0),
+						color: combineRgb(0, 0, 0),
+					},
+				},
+			],
+		})
 		presets.push({
 			type: 'button',
 			category: 'Front panel',
@@ -184,27 +183,24 @@ class VSP628ProModuleInstance extends InstanceBase {
 					up: [],
 				},
 			],
-			feedbacks: [{
-				feedbackId: FEEDBACK_FRONT_PANEL_UNLOCKED,
-				options:{},
-				style:{
-					bgcolor: combineRgb(0, 204, 0),
-					color: combineRgb(255,255,255),					
-				}
-			}],
-		});		
+			feedbacks: [
+				{
+					feedbackId: FEEDBACK_FRONT_PANEL_UNLOCKED,
+					options: {},
+					style: {
+						bgcolor: combineRgb(0, 204, 0),
+						color: combineRgb(255, 255, 255),
+					},
+				},
+			],
+		})
 
 		this.setPresetDefinitions(presets)
 	}
 
-
 	initApiConnector() {
 		let self = this
-		this.apiConnector = new RGBLinkVSP628ProConnector(
-			this.config.host,
-			this.config.port,
-			this.config.polling
-		)
+		this.apiConnector = new RGBLinkVSP628ProConnector(this.config.host, this.config.port, this.config.polling)
 		this.apiConnector.enableLog(this)
 		this.apiConnector.on(this.apiConnector.EVENT_NAME_ON_DEVICE_STATE_CHANGED, () => {
 			self.checkAllFeedbacks()
@@ -231,9 +227,8 @@ class VSP628ProModuleInstance extends InstanceBase {
 
 runEntrypoint(VSP628ProModuleInstance, UpgradeScripts)
 
-
 /**
  * usefull for developing
- * for yearn and powershell https://bobbyhadz.com/blog/yarn-cannot-be-loaded-running-scripts-disabled 
+ * for yearn and powershell https://bobbyhadz.com/blog/yarn-cannot-be-loaded-running-scripts-disabled
  * first eslint initalization need: npm init @eslint/config
  */
