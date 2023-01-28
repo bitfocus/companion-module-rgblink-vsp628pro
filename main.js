@@ -3,6 +3,7 @@ const UpgradeScripts = require('./upgrades')
 const { RGBLinkVSP628ProConnector } = require('./rgblink_vsp628pro_connector')
 
 const FrontPanelManager = require('./managers/FrontPanelManager')
+const UserFlashManager = require('./managers/UserFlashManager')
 
 class VSP628ProModuleInstance extends InstanceBase {
 	apiConnector = new RGBLinkVSP628ProConnector()
@@ -17,17 +18,16 @@ class VSP628ProModuleInstance extends InstanceBase {
 
 		try {
 			this.log('debug', 'RGBlink VSP628PRO: init...')
+
 			this.initApiConnector()
+
 			this.managers.push(new FrontPanelManager(this))
-			// TODO all functions
-			// TODO Factory reset (0x06)
-			// TODO Save To the user flash(0x08) & Load from the user flash(0x09)
-			// TODO Standard mode (0x04) [standard/pip/dual2k/switcher]
-			// TODO Read which layer selected (0x03) [A/B]
-			// TODO Source switch (0x00), different to pip and dual2k...
+			this.managers.push(new UserFlashManager(this))
+
 			this.updateActions()
 			this.updateFeedbacks()
 			this.updatePresets()
+
 			this.log('debug', 'RGBlink VSP628PRO: init finished')
 		} catch (ex) {
 			this.updateStatus(InstanceStatus.UnknownError, ex)
@@ -41,7 +41,19 @@ class VSP628ProModuleInstance extends InstanceBase {
 	}
 
 	async configUpdated(config) {
+		let resetConnection = false
+
+		if (this.config.host != config.host || this.config.port != config.port) {
+			resetConnection = true
+		}
+
 		this.config = config
+
+		if (resetConnection) {
+			this.apiConnector.createSocket(config.host, config.port)
+		}
+
+		this.apiConnector.setPolling(this.config.polling)
 	}
 
 	// Return config fields for web config
@@ -91,7 +103,7 @@ class VSP628ProModuleInstance extends InstanceBase {
 	updatePresets() {
 		let presets = []
 		for (var i = 0; i < this.managers.length; i++) {
-			presets = { ...presets, ...this.managers[i].getPresets() }
+			presets = presets.concat(this.managers[i].getPresets())
 		}
 
 		this.setPresetDefinitions(presets)

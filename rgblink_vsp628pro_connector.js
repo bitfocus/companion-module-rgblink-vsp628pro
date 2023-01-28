@@ -11,6 +11,10 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 
 	deviceStatus = {
 		frontPanelLocked: undefined,
+		flashUserMode: {
+			lastSavedMode: undefined,
+			lastLoadedMode: undefined,
+		},
 	}
 
 	constructor(host, port, polling) {
@@ -51,16 +55,52 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		return lock == FRONT_PANEL_LOCKED || lock == FRONT_PANEL_UNLOCKED
 	}
 
+	sendSaveToUserFlash(flashUserMode) {
+		if (this.isFlashUserModeValid(flashUserMode)) {
+			this.sendCommand('68', '08' /*save to user flash*/, this.byteToTwoSignHex(flashUserMode), '00', '00')
+		} else {
+			this.myLog('Wrong mode: ' + flashUserMode)
+		}
+	}
+
+	sendLoadFromUserFlash(flashUserMode) {
+		if (this.isFlashUserModeValid(flashUserMode)) {
+			this.sendCommand('68', '09' /*load from user flash*/, this.byteToTwoSignHex(flashUserMode), '00', '00')
+		} else {
+			this.myLog('Wrong mode: ' + flashUserMode)
+		}
+	}
+
+	isFlashUserModeValid(flashUserMode) {
+		let intValue = parseInt(flashUserMode)
+		return intValue >= 1 && intValue <= 21
+	}
+
 	consumeFeedback(ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4) {
 		let redeableMsg = [ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4].join(' ')
 		// this.myLog(redeableMsg)
 
 		if (CMD == '68') {
 			if (DAT1 == '02' || DAT1 == '03') {
+				// Set the front panel lock or unlock (0x02)
 				if (this.isLockStatusValid(DAT2)) {
 					this.emitConnectionStatusOK()
 					this.deviceStatus.frontPanelLocked = DAT2
 					return this.logFeedback(redeableMsg, 'Front panel lock status is ' + FRONT_PANEL_NAMES[DAT2])
+				}
+			} else if (DAT1 == '08') {
+				// Save To the user flash(0x08)
+				if (this.isFlashUserModeValid(DAT2)) {
+					this.emitConnectionStatusOK()
+					this.deviceStatus.flashUserMode.lastSavedMode = parseInt(DAT2, this.PARSE_INT_HEX_MODE)
+					return this.logFeedback(redeableMsg, 'Save to user flash, mode ' + parseInt(DAT2, this.PARSE_INT_HEX_MODE))
+				}
+			} else if (DAT1 == '09') {
+				// Load from the user flash(0x09)
+				if (this.isFlashUserModeValid(DAT2)) {
+					this.emitConnectionStatusOK()
+					this.deviceStatus.flashUserMode.lastLoadedMode = parseInt(DAT2, this.PARSE_INT_HEX_MODE)
+					return this.logFeedback(redeableMsg, 'Load from user flash, mode ' + parseInt(DAT2, this.PARSE_INT_HEX_MODE))
 				}
 			}
 		}
