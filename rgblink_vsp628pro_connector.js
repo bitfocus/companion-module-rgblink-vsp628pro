@@ -40,7 +40,7 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 	}
 
 	askAboutStatus() {
-		this.sendCommand('68', '03', '00', '00', '00') // [OK] read the panel is lock or unlock
+		this.sendCommand('68', '03', '00', '00', '00') // [OK] read the panel state (is locked or unlocked)
 	}
 
 	sendSetFrontPanelLockStatus(status) {
