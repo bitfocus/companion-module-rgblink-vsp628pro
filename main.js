@@ -19,6 +19,12 @@ class VSP628ProModuleInstance extends InstanceBase {
 			this.log('debug', 'RGBlink VSP628PRO: init...')
 			this.initApiConnector()
 			this.managers.push(new FrontPanelManager(this))
+			// TODO all functions
+			// TODO Factory reset (0x06)
+			// TODO Save To the user flash(0x08) & Load from the user flash(0x09)
+			// TODO Standard mode (0x04) [standard/pip/dual2k/switcher]
+			// TODO Read which layer selected (0x03) [A/B]
+			// TODO Source switch (0x00), different to pip and dual2k...
 			this.updateActions()
 			this.updateFeedbacks()
 			this.updatePresets()

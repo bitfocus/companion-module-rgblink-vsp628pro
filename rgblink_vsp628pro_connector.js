@@ -36,9 +36,7 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 	}
 
 	askAboutStatus() {
-		//this.sendCommand('78', '02', '00', '00', '00') // 3.2.20 Read the master and secondary channel
-		// THIS NOT WORK, it closes graph?
-		//this.sendCommand('C7', '01' /*read*/, '00', '00', '00') // 3.2.44 Waveform diagram, vector diagram, and histogram:
+		this.sendCommand('68', '03', '00', '00', '00') // [OK] read the panel is lock or unlock
 	}
 
 	sendSetFrontPanelLockStatus(status) {
@@ -55,10 +53,10 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 
 	consumeFeedback(ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4) {
 		let redeableMsg = [ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4].join(' ')
-		this.myLog(redeableMsg)
+		// this.myLog(redeableMsg)
 
 		if (CMD == '68') {
-			if (DAT1 == '02') {
+			if (DAT1 == '02' || DAT1 == '03') {
 				if (this.isLockStatusValid(DAT2)) {
 					this.emitConnectionStatusOK()
 					this.deviceStatus.frontPanelLocked = DAT2

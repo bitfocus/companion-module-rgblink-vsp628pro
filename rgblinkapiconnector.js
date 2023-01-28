@@ -112,7 +112,6 @@ class RGBLinkApiConnector {
 	}
 
 	onDataReceived(message) {
-		this.myLog(message.length)
 		try {
 			if (message.length !== 19) {
 				this.emit(this.EVENT_NAME_ON_DATA_API_NOT_STANDARD_LENGTH, [message])
@@ -153,12 +152,12 @@ class RGBLinkApiConnector {
 	}
 
 	sendCommandNative(cmd) {
-		let self = this
+		//let self = this
 		try {
 			if (cmd !== undefined && cmd != '') {
 				if (this.socket !== undefined) {
 					this.socket.send(cmd).then(function () {
-						self.myLog('sent?')
+						// self.myLog('sent?')
 					})
 					this.myLog('SENT    : ' + cmd)
 					this.lastDataSentTime = new Date().getTime()
@@ -209,8 +208,6 @@ class RGBLinkApiConnector {
 	}
 
 	validateReceivedDataAndEmitIfValid(message) {
-		this.myLog('before validate')
-
 		let redeableMsg = message.toString('utf8').toUpperCase()
 
 		// Checksum checking
@@ -240,7 +237,6 @@ class RGBLinkApiConnector {
 		}
 		// end of validate section
 
-		this.myLog('before emit')
 		this.emit(this.EVENT_NAME_ON_DATA_API, [ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4])
 	}
 

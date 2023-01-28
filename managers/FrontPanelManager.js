@@ -50,7 +50,6 @@ class FrontPanelManager {
 			// options is how the user can choose the condition the feedback activates for
 			options: [],
 			callback: (/*feedback*/) => {
-				this.myModule.log('debug', 'checking feedback for locked...')
 				return this.myModule.apiConnector.deviceStatus.frontPanelLocked == FRONT_PANEL_LOCKED
 			},
 		}
@@ -61,7 +60,6 @@ class FrontPanelManager {
 			// options is how the user can choose the condition the feedback activates for
 			options: [],
 			callback: (/*feedback*/) => {
-				this.myModule.log('debug', 'checking feedback for unlocked...')
 				return this.myModule.apiConnector.deviceStatus.frontPanelLocked == FRONT_PANEL_UNLOCKED
 			},
 		}
