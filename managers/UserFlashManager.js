@@ -1,4 +1,3 @@
-// version 2.0-SNAPSHOT
 const ACTION_SAVE_TO_USER_FLASH = 'flash_save'
 const ACTION_LOAD_FROM_USER_FLASH = 'flash_load'
 

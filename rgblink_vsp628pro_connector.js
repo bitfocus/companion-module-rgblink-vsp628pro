@@ -6,6 +6,20 @@ const FRONT_PANEL_NAMES = []
 FRONT_PANEL_NAMES[FRONT_PANEL_LOCKED] = 'Locked'
 FRONT_PANEL_NAMES[FRONT_PANEL_UNLOCKED] = 'Unlocked'
 
+const SYSTEM_MODE_STANDARD = '16'
+const SYSTEM_MODE_PIP = '11'
+const SYSTEM_MODE_DUAL_2K = '15'
+const SYSTEM_MODE_SWITCHER = '17'
+const SYSTEM_MODE_SPLIT = '19'
+//const SYSTEM_MODE_MIN_DELAY = '64' // cant set this mode by API, why?
+const SYSTEM_MODE_NAMES = []
+SYSTEM_MODE_NAMES[SYSTEM_MODE_STANDARD] = 'Standard'
+SYSTEM_MODE_NAMES[SYSTEM_MODE_PIP] = 'PIP'
+SYSTEM_MODE_NAMES[SYSTEM_MODE_DUAL_2K] = 'Dual 2K'
+SYSTEM_MODE_NAMES[SYSTEM_MODE_SWITCHER] = 'Switcher'
+SYSTEM_MODE_NAMES[SYSTEM_MODE_SPLIT] = 'Split'
+//SYSTEM_MODE_NAMES[SYSTEM_MODE_MIN_DELAY] = 'Min Delay'
+
 class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 	EVENT_NAME_ON_DEVICE_STATE_CHANGED = 'on_device_state_changed'
 
@@ -15,6 +29,7 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			lastSavedMode: undefined,
 			lastLoadedMode: undefined,
 		},
+		systemMode: undefined,
 	}
 
 	constructor(host, port, polling) {
@@ -22,7 +37,7 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		var self = this
 
 		this.on(this.EVENT_NAME_ON_DATA_API_NOT_STANDARD_LENGTH, (message) => {
-			this.myLog('Not standard data:' + message)
+			this.myWarn('Not standard data:' + message)
 		})
 
 		this.on(this.EVENT_NAME_ON_DATA_API, (ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4) => {
@@ -41,13 +56,14 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 
 	askAboutStatus() {
 		this.sendCommand('68', '03', '00', '00', '00') // [OK] read the panel state (is locked or unlocked)
+		this.sendCommand('6B', '01', '00', '00', '00') // [OK] read the system mode (standard/pip/dual 2k/switcher...)
 	}
 
 	sendSetFrontPanelLockStatus(status) {
 		if (this.isLockStatusValid(status)) {
 			this.sendCommand('68', '02' /*Set the panel lock or unlock*/, this.byteToTwoSignHex(status), '00', '00')
 		} else {
-			this.myLog('Wrong lock status: ' + status)
+			this.myWarn('Wrong lock status: ' + status)
 		}
 	}
 
@@ -59,7 +75,7 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		if (this.isFlashUserModeValid(flashUserMode)) {
 			this.sendCommand('68', '08' /*save to user flash*/, this.byteToTwoSignHex(flashUserMode), '00', '00')
 		} else {
-			this.myLog('Wrong mode: ' + flashUserMode)
+			this.myWarn('Wrong mode: ' + flashUserMode)
 		}
 	}
 
@@ -67,13 +83,40 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		if (this.isFlashUserModeValid(flashUserMode)) {
 			this.sendCommand('68', '09' /*load from user flash*/, this.byteToTwoSignHex(flashUserMode), '00', '00')
 		} else {
-			this.myLog('Wrong mode: ' + flashUserMode)
+			this.myWarn('Wrong mode: ' + flashUserMode)
 		}
 	}
 
 	isFlashUserModeValid(flashUserMode) {
 		let intValue = parseInt(flashUserMode)
 		return intValue >= 1 && intValue <= 21
+	}
+
+	sendSystemMode(systemMode) {
+		if (this.isSystemModeValid(systemMode)) {
+			let DAT2 = this.internalGetDat2ForSystemMode(systemMode)
+			this.sendCommand('6B', '00', DAT2, systemMode, '00')
+		} else {
+			this.myWarn('Wrong system mode: ' + systemMode)
+		}
+	}
+
+	isSystemModeValid(systemMode) {
+		return systemMode in SYSTEM_MODE_NAMES
+	}
+
+	internalGetDat2ForSystemMode(systemMode) {
+		if (this.isSystemModeValid(systemMode)) {
+			if (systemMode == SYSTEM_MODE_DUAL_2K || systemMode == SYSTEM_MODE_PIP) {
+				return '01'
+			} else {
+				return '00'
+			}
+			// this.myWarn('Unsupported systemMode: ' + systemMode + '. This must be fixed by developer.')
+		} else {
+			this.myWarn('Wrong system mode: ' + systemMode)
+		}
+		return '00'
 	}
 
 	consumeFeedback(ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4) {
@@ -103,13 +146,22 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 					return this.logFeedback(redeableMsg, 'Load from user flash, mode ' + parseInt(DAT2, this.PARSE_INT_HEX_MODE))
 				}
 			}
+		} else if (CMD == '6B') {
+			if (DAT1 == '00' || DAT1 == '01') {
+				// system mode standard/pip/dula 2k/switcher
+				if (this.isSystemModeValid(DAT3)) {
+					this.emitConnectionStatusOK()
+					this.deviceStatus.systemMode = DAT3
+					return this.logFeedback(redeableMsg, 'Mode ' + SYSTEM_MODE_NAMES[this.deviceStatus.systemMode])
+				}
+			}
 		}
 
-		this.myLog('Unrecognized feedback message:' + redeableMsg)
+		this.myWarn('Unrecognized feedback message:' + redeableMsg)
 	}
 
 	logFeedback(redeableMsg, info) {
-		this.myLog('Feedback:' + redeableMsg + ' ' + info)
+		this.myDebug('Feedback:' + redeableMsg + ' ' + info)
 	}
 
 	emitConnectionStatusOK() {
@@ -118,5 +170,13 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 }
 
 module.exports.RGBLinkVSP628ProConnector = RGBLinkVSP628ProConnector
+
 module.exports.FRONT_PANEL_LOCKED = FRONT_PANEL_LOCKED
 module.exports.FRONT_PANEL_UNLOCKED = FRONT_PANEL_UNLOCKED
+
+module.exports.SYSTEM_MODE_NAMES = SYSTEM_MODE_NAMES
+module.exports.SYSTEM_MODE_STANDARD = SYSTEM_MODE_STANDARD
+module.exports.SYSTEM_MODE_PIP = SYSTEM_MODE_PIP
+module.exports.SYSTEM_MODE_DUAL_2K = SYSTEM_MODE_DUAL_2K
+module.exports.SYSTEM_MODE_SWITCHER = SYSTEM_MODE_SWITCHER
+module.exports.SYSTEM_MODE_SPLIT = SYSTEM_MODE_SPLIT

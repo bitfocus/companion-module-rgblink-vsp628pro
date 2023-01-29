@@ -42,10 +42,18 @@ class RGBLinkApiConnector {
 		this.logProvider = undefined
 	}
 
-	myLog(msg) {
+	myDebug(msg) {
+		this.internalMyLog('debug', msg)
+	}
+
+	myWarn(msg) {
+		this.internalMyLog('warn', msg)
+	}
+
+	internalMyLog(level, msg) {
 		try {
 			if (this.logProvider) {
-				this.logProvider.log('debug', msg)
+				this.logProvider.log(level, msg)
 			} else {
 				console.log(msg)
 			}
@@ -79,12 +87,12 @@ class RGBLinkApiConnector {
 				}, 2000)
 			})(sentDate)
 		} catch (ex) {
-			this.myLog(ex)
+			this.myDebug(ex)
 		}
 	}
 
 	createSocket(host, port) {
-		this.myLog('RGBLinkApiConnector: creating socket ' + host + ':' + port + '...')
+		this.myDebug('RGBLinkApiConnector: creating socket ' + host + ':' + port + '...')
 		this.config.host = host
 
 		if (this.socket !== undefined) {
@@ -97,15 +105,15 @@ class RGBLinkApiConnector {
 		if (host) {
 			this.socket = new UDPHelper(host, port)
 			this.socket.on('status_change', (status, message) => {
-				this.myLog('RGBLinkApiConnector: udp status_change:' + status + ' ' + message)
+				this.myDebug('RGBLinkApiConnector: udp status_change:' + status + ' ' + message)
 			})
 
 			this.socket.on('error', (err) => {
-				this.myLog('RGBLinkApiConnector: udp error:' + err)
+				this.myDebug('RGBLinkApiConnector: udp error:' + err)
 			})
 
 			this.socket.on('data', (message) => {
-				this.myLog('FEEDBACK: ' + message)
+				this.myDebug('FEEDBACK: ' + message)
 				this.onDataReceived(message)
 			})
 		}
@@ -120,7 +128,7 @@ class RGBLinkApiConnector {
 			}
 			this.lastDataReceivedTime = new Date().getTime()
 		} catch (ex) {
-			this.myLog(ex)
+			this.myDebug(ex)
 		}
 	}
 
@@ -159,15 +167,15 @@ class RGBLinkApiConnector {
 					this.socket.send(cmd).then(function () {
 						// self.myLog('sent?')
 					})
-					this.myLog('SENT    : ' + cmd)
+					this.myDebug('SENT    : ' + cmd)
 					this.lastDataSentTime = new Date().getTime()
 					this.onAfterDataSent()
 				} else {
-					this.myLog("Can't send command, socket undefined!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+					this.myDebug("Can't send command, socket undefined!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 				}
 			}
 		} catch (ex) {
-			this.myLog(ex)
+			this.myDebug(ex)
 		}
 	}
 
@@ -222,7 +230,7 @@ class RGBLinkApiConnector {
 		let calculatedChecksum = this.calculateChecksum(ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4)
 		if (checksumInMessage != calculatedChecksum) {
 			this.emit(this.EVENT_NAME_ON_CONNECTION_WARNING, 'Incorrect checksum ' + redeableMsg)
-			this.myLog('redeableMsg Incorrect checksum: ' + checksumInMessage + ' != ' + calculatedChecksum)
+			this.myDebug('redeableMsg Incorrect checksum: ' + checksumInMessage + ' != ' + calculatedChecksum)
 			return
 		}
 

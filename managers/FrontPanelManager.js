@@ -1,4 +1,3 @@
-// version 2.0-SNAPSHOT
 const ACTION_FRONT_PANEL_LOCK = 'lock'
 const ACTION_FRONT_PANEL_UNLOCK = 'unlock'
 
