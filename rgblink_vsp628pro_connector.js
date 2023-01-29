@@ -20,6 +20,12 @@ SYSTEM_MODE_NAMES[SYSTEM_MODE_SWITCHER] = 'Switcher'
 SYSTEM_MODE_NAMES[SYSTEM_MODE_SPLIT] = 'Split'
 //SYSTEM_MODE_NAMES[SYSTEM_MODE_MIN_DELAY] = 'Min Delay'
 
+const LAYER_A = '00'
+const LAYER_B = '01'
+const LAYER_NAMES = []
+LAYER_NAMES[LAYER_A] = 'Layer A'
+LAYER_NAMES[LAYER_B] = 'Layer B'
+
 class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 	EVENT_NAME_ON_DEVICE_STATE_CHANGED = 'on_device_state_changed'
 
@@ -30,6 +36,7 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			lastLoadedMode: undefined,
 		},
 		systemMode: undefined,
+		layer: undefined,
 	}
 
 	constructor(host, port, polling) {
@@ -57,6 +64,7 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 	askAboutStatus() {
 		this.sendCommand('68', '03', '00', '00', '00') // [OK] read the panel state (is locked or unlocked)
 		this.sendCommand('6B', '01', '00', '00', '00') // [OK] read the system mode (standard/pip/dual 2k/switcher...)
+		this.sendCommand('6B', '03', '00', '00', '00') // [OK] Read which layer selected (0x03)
 	}
 
 	sendSetFrontPanelLockStatus(status) {
@@ -119,6 +127,18 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		return '00'
 	}
 
+	sendLayer(layer) {
+		if (this.isLayerValid(layer)) {
+			this.sendCommand('6B', '02', layer, '00', '00')
+		} else {
+			this.myWarn('Wrong layer code: ' + layer)
+		}
+	}
+
+	isLayerValid(layer) {
+		return layer in LAYER_NAMES
+	}
+
 	consumeFeedback(ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4) {
 		let redeableMsg = [ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4].join(' ')
 		// this.myLog(redeableMsg)
@@ -154,6 +174,12 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 					this.deviceStatus.systemMode = DAT3
 					return this.logFeedback(redeableMsg, 'Mode ' + SYSTEM_MODE_NAMES[this.deviceStatus.systemMode])
 				}
+			} else if (DAT1 == '02' || DAT1 == '03') {
+				if (this.isLayerValid(DAT2)) {
+					this.emitConnectionStatusOK()
+					this.deviceStatus.layer = DAT2
+					return this.logFeedback(redeableMsg, 'Layer ' + LAYER_NAMES[this.deviceStatus.layer])
+				}
 			}
 		}
 
@@ -180,3 +206,7 @@ module.exports.SYSTEM_MODE_PIP = SYSTEM_MODE_PIP
 module.exports.SYSTEM_MODE_DUAL_2K = SYSTEM_MODE_DUAL_2K
 module.exports.SYSTEM_MODE_SWITCHER = SYSTEM_MODE_SWITCHER
 module.exports.SYSTEM_MODE_SPLIT = SYSTEM_MODE_SPLIT
+
+module.exports.LAYER_NAMES = LAYER_NAMES
+module.exports.LAYER_A = LAYER_A
+module.exports.LAYER_B = LAYER_B
