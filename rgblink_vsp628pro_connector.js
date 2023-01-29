@@ -238,7 +238,7 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 					}
 					return this.logFeedback(
 						redeableMsg,
-						'Source on ' + LAYER_NAMES[this.deviceStatus.layer] + ' is ' + SOURCE_SIGNALS_NAMES[DAT3]
+						'Source on ' + LAYER_NAMES[DAT2] + ' is ' + SOURCE_SIGNALS_NAMES[DAT3]
 					)
 				}
 			}
