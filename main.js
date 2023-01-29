@@ -6,6 +6,7 @@ const FrontPanelManager = require('./managers/FrontPanelManager')
 const UserFlashManager = require('./managers/UserFlashManager')
 const SystemModeManager = require('./managers/SystemModeManager')
 const LayerManager = require('./managers/LayerManager')
+const SourceSwitchManager = require('./managers/SourceSwitchManager')
 
 class VSP628ProModuleInstance extends InstanceBase {
 	apiConnector = new RGBLinkVSP628ProConnector()
@@ -23,6 +24,7 @@ class VSP628ProModuleInstance extends InstanceBase {
 
 			this.initApiConnector()
 
+			this.managers.push(new SourceSwitchManager(this))
 			this.managers.push(new UserFlashManager(this))
 			this.managers.push(new SystemModeManager(this))
 			this.managers.push(new LayerManager(this))

@@ -26,6 +26,26 @@ const LAYER_NAMES = []
 LAYER_NAMES[LAYER_A] = 'Layer A'
 LAYER_NAMES[LAYER_B] = 'Layer B'
 
+const SOURCE_SIGNAL_SDI1 = '00'
+const SOURCE_SIGNAL_SDI2 = '01'
+const SOURCE_SIGNAL_DVI = '02'
+const SOURCE_SIGNAL_HDMI = '03'
+const SOURCE_SIGNAL_DP = '04'
+const SOURCE_SIGNAL_VGA = '05'
+const SOURCE_SIGNAL_7 = '06'
+const SOURCE_SIGNAL_8 = '07'
+const SOURCE_SIGNAL_LOGO_TP = '08'
+const SOURCE_SIGNALS_NAMES = []
+SOURCE_SIGNALS_NAMES[SOURCE_SIGNAL_SDI1] = 'SDI1'
+SOURCE_SIGNALS_NAMES[SOURCE_SIGNAL_SDI2] = 'SDI2'
+SOURCE_SIGNALS_NAMES[SOURCE_SIGNAL_DVI] = 'DVI'
+SOURCE_SIGNALS_NAMES[SOURCE_SIGNAL_HDMI] = 'HDMI'
+SOURCE_SIGNALS_NAMES[SOURCE_SIGNAL_DP] = 'DP'
+SOURCE_SIGNALS_NAMES[SOURCE_SIGNAL_VGA] = 'VGA'
+SOURCE_SIGNALS_NAMES[SOURCE_SIGNAL_7] = 'custom7' //custom
+SOURCE_SIGNALS_NAMES[SOURCE_SIGNAL_8] = 'custom8' //custom
+SOURCE_SIGNALS_NAMES[SOURCE_SIGNAL_LOGO_TP] = 'LOGO'
+
 class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 	EVENT_NAME_ON_DEVICE_STATE_CHANGED = 'on_device_state_changed'
 
@@ -37,6 +57,10 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		},
 		systemMode: undefined,
 		layer: undefined,
+		source: {
+			layerA: undefined,
+			layerB: undefined,
+		},
 	}
 
 	constructor(host, port, polling) {
@@ -65,6 +89,8 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		this.sendCommand('68', '03', '00', '00', '00') // [OK] read the panel state (is locked or unlocked)
 		this.sendCommand('6B', '01', '00', '00', '00') // [OK] read the system mode (standard/pip/dual 2k/switcher...)
 		this.sendCommand('6B', '03', '00', '00', '00') // [OK] Read which layer selected (0x03)
+		this.sendCommand('72', '01', '00', '00', '00') // [TEST] Read input on layer A
+		this.sendCommand('72', '01', '01', '00', '00') // [TEST] Read input on layer B
 	}
 
 	sendSetFrontPanelLockStatus(status) {
@@ -139,6 +165,23 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		return layer in LAYER_NAMES
 	}
 
+	sendSourceSignalOnLayer(sourceSignal, layer) {
+		console.log('sendSourceSignalOnLayer:' + sourceSignal + ',' + layer)
+		if (this.isLayerValid(layer)) {
+			if (this.isSourceValid(sourceSignal)) {
+				this.sendCommand('72', '00', layer, sourceSignal, '00')
+			} else {
+				this.myWarn('Wrong source code: ' + sourceSignal)
+			}
+		} else {
+			this.myWarn('Wrong layer code: ' + layer)
+		}
+	}
+
+	isSourceValid(source) {
+		return source in SOURCE_SIGNALS_NAMES
+	}
+
 	consumeFeedback(ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4) {
 		let redeableMsg = [ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4].join(' ')
 		// this.myLog(redeableMsg)
@@ -175,10 +218,28 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 					return this.logFeedback(redeableMsg, 'Mode ' + SYSTEM_MODE_NAMES[this.deviceStatus.systemMode])
 				}
 			} else if (DAT1 == '02' || DAT1 == '03') {
+				// layer
 				if (this.isLayerValid(DAT2)) {
 					this.emitConnectionStatusOK()
 					this.deviceStatus.layer = DAT2
 					return this.logFeedback(redeableMsg, 'Layer ' + LAYER_NAMES[this.deviceStatus.layer])
+				}
+			}
+		} else if (CMD == '72') {
+			if (DAT1 == '00' || DAT1 == '01') {
+				// Source switch (0x00)
+				// DAT2 - layer, DAT3 - source
+				if (this.isLayerValid(DAT2) && this.isSourceValid(DAT3)) {
+					this.emitConnectionStatusOK()
+					if (DAT2 == LAYER_A) {
+						this.deviceStatus.source.layerA = DAT3
+					} else {
+						this.deviceStatus.source.layerB = DAT3
+					}
+					return this.logFeedback(
+						redeableMsg,
+						'Source on ' + LAYER_NAMES[this.deviceStatus.layer] + ' is ' + SOURCE_SIGNALS_NAMES[DAT3]
+					)
 				}
 			}
 		}
@@ -210,3 +271,6 @@ module.exports.SYSTEM_MODE_SPLIT = SYSTEM_MODE_SPLIT
 module.exports.LAYER_NAMES = LAYER_NAMES
 module.exports.LAYER_A = LAYER_A
 module.exports.LAYER_B = LAYER_B
+
+module.exports.SOURCE_SIGNALS_NAMES = SOURCE_SIGNALS_NAMES
+module.exports.SOURCE_SIGNAL_HDMI = SOURCE_SIGNAL_HDMI

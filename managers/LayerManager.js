@@ -84,9 +84,9 @@ class LayerManager {
 			presets.push({
 				type: 'button',
 				category: 'Layer',
-				name: 'Set layer ' + LAYER_NAMES[layer], // A name for the preset. Shown to the user when they hover over it
+				name: 'Set ' + LAYER_NAMES[layer], // A name for the preset. Shown to the user when they hover over it
 				style: {
-					text: 'Set layer ' + LAYER_NAMES[layer],
+					text: 'Set ' + LAYER_NAMES[layer],
 					size: 'auto',
 					color: colorsSingle.WHITE,
 					bgcolor: colorsSingle.BLACK,
