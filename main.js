@@ -9,6 +9,7 @@ const LayerManager = require('./managers/LayerManager')
 const SourceSwitchManager = require('./managers/SourceSwitchManager')
 const OutputResolutionManager = require('./managers/OutputResolutionManager')
 const FreezeManager = require('./managers/FreezeManager')
+const MirrorAndRotateManager = require('./managers/MirrorAndRotateManager')
 
 class VSP628ProModuleInstance extends InstanceBase {
 	apiConnector = new RGBLinkVSP628ProConnector()
@@ -31,6 +32,7 @@ class VSP628ProModuleInstance extends InstanceBase {
 			this.managers.push(new OutputResolutionManager(this))
 			this.managers.push(new SystemModeManager(this))
 			this.managers.push(new FreezeManager(this))
+			this.managers.push(new MirrorAndRotateManager(this))
 			this.managers.push(new LayerManager(this))
 			this.managers.push(new FrontPanelManager(this))
 

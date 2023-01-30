@@ -133,6 +133,12 @@ const FREEZE_NAMES = []
 FREEZE_NAMES[FREEZE_STATUS_LIVE] = 'Live'
 FREEZE_NAMES[FREEZE_STATUS_FREEZE] = 'Freeze'
 
+const MIRROR_STATUS_ON = '01'
+const MIRROR_STATUS_OFF = '00'
+const MIRROR_NAMES = []
+MIRROR_NAMES[MIRROR_STATUS_ON] = 'On'
+MIRROR_NAMES[MIRROR_STATUS_OFF] = 'Off'
+
 class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 	EVENT_NAME_ON_DEVICE_STATE_CHANGED = 'on_device_state_changed'
 
@@ -144,9 +150,17 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		},
 		systemMode: undefined,
 		layer: undefined,
-		source: {
-			layerA: undefined,
-			layerB: undefined,
+		sources: {
+			layerA: {
+				sourceId: undefined,
+				hMirror: undefined,
+				vMirror: undefined,
+			},
+			layerB: {
+				sourceId: undefined,
+				hMirror: undefined,
+				vMirror: undefined,
+			},
 		},
 		output: {
 			resolution1: undefined,
@@ -185,7 +199,11 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		this.sendCommand('72', '01', '01', '00', '00') // [OK] Read input on layer B
 		this.sendCommand('74', '01', '00', '00', '00') // [TEST] Read output resolution on OUT1
 		this.sendCommand('74', '01', '01', '00', '00') // [TEST] Read output resolution on OUT2
-		this.sendCommand('75', '01', '01', '00', '00') // [TEST] Read freeze/live
+		this.sendCommand('75', '01', '01', '00', '00') // [OK] Read freeze/live
+		this.sendCommand('75', '15', '00', '00', '00') // [OK] Read H Mirror for layer A
+		this.sendCommand('75', '19', '00', '00', '00') // [OK] Read V Mirror for layer A
+		this.sendCommand('75', '15', '01', '00', '00') // [OK] Read H Mirror for layer B
+		this.sendCommand('75', '19', '01', '00', '00') // [OK] Read V Mirror for layer B
 
 		//this.sendCommand('75', '11', '00', '00', '00') // feedback 75 11 00 80 07 // bad example for freeze live....
 		//this.sendCommand('75', '11', '01', '00', '00') // feedback 75 11 01 80 02
@@ -319,89 +337,144 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		}
 	}
 
+	isMirrorStatusValid(mirrorStatus) {
+		return mirrorStatus in MIRROR_NAMES
+	}
+
+	sendSetHMirror(mirrorStatus, layer) {
+		if (this.isLayerValid(layer)) {
+			if (this.isMirrorStatusValid(mirrorStatus)) {
+				this.sendCommand('75', '14', layer, mirrorStatus, '00')
+			} else {
+				this.myWarn('Wrong mirror code: ' + mirrorStatus)
+			}
+		} else {
+			this.myWarn('Wrong layer code: ' + layer)
+		}
+	}
+
+	sendSetVMirror(mirrorStatus, layer) {
+		if (this.isLayerValid(layer)) {
+			if (this.isMirrorStatusValid(mirrorStatus)) {
+				this.sendCommand('75', '18', layer, mirrorStatus, '00')
+			} else {
+				this.myWarn('Wrong mirror code: ' + mirrorStatus)
+			}
+		} else {
+			this.myWarn('Wrong layer code: ' + layer)
+		}
+	}
+
 	consumeFeedback(ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4) {
 		let redeableMsg = [ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4].join(' ')
 		// this.myLog(redeableMsg)
 
-		if (CMD == '68') {
-			if (DAT1 == '02' || DAT1 == '03') {
-				// Set the front panel lock or unlock (0x02)
-				if (this.isLockStatusValid(DAT2)) {
-					this.emitConnectionStatusOK()
-					this.deviceStatus.frontPanelLocked = DAT2
-					return this.logFeedback(redeableMsg, 'Front panel lock status is ' + FRONT_PANEL_NAMES[DAT2])
-				}
-			} else if (DAT1 == '08') {
-				// Save To the user flash(0x08)
-				if (this.isFlashUserModeValid(DAT2)) {
-					this.emitConnectionStatusOK()
-					this.deviceStatus.flashUserMode.lastSavedMode = parseInt(DAT2, this.PARSE_INT_HEX_MODE)
-					return this.logFeedback(redeableMsg, 'Save to user flash, mode ' + parseInt(DAT2, this.PARSE_INT_HEX_MODE))
-				}
-			} else if (DAT1 == '09') {
-				// Load from the user flash(0x09)
-				if (this.isFlashUserModeValid(DAT2)) {
-					this.emitConnectionStatusOK()
-					this.deviceStatus.flashUserMode.lastLoadedMode = parseInt(DAT2, this.PARSE_INT_HEX_MODE)
-					return this.logFeedback(redeableMsg, 'Load from user flash, mode ' + parseInt(DAT2, this.PARSE_INT_HEX_MODE))
-				}
-			}
-		} else if (CMD == '6B') {
-			if (DAT1 == '00' || DAT1 == '01') {
-				// system mode standard/pip/dula 2k/switcher
-				if (this.isSystemModeValid(DAT3)) {
-					this.emitConnectionStatusOK()
-					this.deviceStatus.systemMode = DAT3
-					return this.logFeedback(redeableMsg, 'Mode ' + SYSTEM_MODE_NAMES[this.deviceStatus.systemMode])
-				}
-			} else if (DAT1 == '02' || DAT1 == '03') {
-				// layer
-				if (this.isLayerValid(DAT2)) {
-					this.emitConnectionStatusOK()
-					this.deviceStatus.layer = DAT2
-					return this.logFeedback(redeableMsg, 'Layer ' + LAYER_NAMES[this.deviceStatus.layer])
-				}
-			}
-		} else if (CMD == '72') {
-			if (DAT1 == '00' || DAT1 == '01') {
-				// Source switch (0x00)
-				// DAT2 - layer, DAT3 - source
-				if (this.isLayerValid(DAT2) && this.isSourceValid(DAT3)) {
-					this.emitConnectionStatusOK()
-					if (DAT2 == LAYER_A) {
-						this.deviceStatus.source.layerA = DAT3
-					} else {
-						this.deviceStatus.source.layerB = DAT3
+		try {
+			if (CMD == '68') {
+				if (DAT1 == '02' || DAT1 == '03') {
+					// Set the front panel lock or unlock (0x02)
+					if (this.isLockStatusValid(DAT2)) {
+						this.emitConnectionStatusOK()
+						this.deviceStatus.frontPanelLocked = DAT2
+						return this.logFeedback(redeableMsg, 'Front panel lock status is ' + FRONT_PANEL_NAMES[DAT2])
 					}
-					return this.logFeedback(redeableMsg, 'Source on ' + LAYER_NAMES[DAT2] + ' is ' + SOURCE_SIGNALS_NAMES[DAT3])
-				}
-			}
-		} else if (CMD == '74') {
-			if (DAT1 == '00' || DAT1 == '01') {
-				let readedResolution = '0x' + DAT3
-				if (this.isResolutionValid(readedResolution))
-					if (DAT2 == '00') {
+				} else if (DAT1 == '08') {
+					// Save To the user flash(0x08)
+					if (this.isFlashUserModeValid(DAT2)) {
 						this.emitConnectionStatusOK()
-						this.deviceStatus.output.resolution1 = readedResolution
-						return this.logFeedback(redeableMsg, 'Output resolution 1: ' + this.getResolutionName(readedResolution))
-					} else if (DAT2 == '01') {
-						this.emitConnectionStatusOK()
-						this.deviceStatus.output.resolution2 = readedResolution
-						return this.logFeedback(redeableMsg, 'Output resolution 2: ' + this.getResolutionName(readedResolution))
+						this.deviceStatus.flashUserMode.lastSavedMode = parseInt(DAT2, this.PARSE_INT_HEX_MODE)
+						return this.logFeedback(redeableMsg, 'Save to user flash, mode ' + parseInt(DAT2, this.PARSE_INT_HEX_MODE))
 					}
-			}
-		} else if (CMD == '75') {
-			if (DAT1 == '00' || DAT1 == '01') {
-				// Freeze/Live
-				if (DAT2 == '01') {
-					// why DAT2 == '01'? id ont know
-					if (this.isFreezeStatusValid(DAT3)) {
+				} else if (DAT1 == '09') {
+					// Load from the user flash(0x09)
+					if (this.isFlashUserModeValid(DAT2)) {
 						this.emitConnectionStatusOK()
-						this.deviceStatus.freezeStatus = DAT3
-						return this.logFeedback(redeableMsg, 'Freeze status: ' + FREEZE_NAMES[this.deviceStatus.freezeStatus])
+						this.deviceStatus.flashUserMode.lastLoadedMode = parseInt(DAT2, this.PARSE_INT_HEX_MODE)
+						return this.logFeedback(
+							redeableMsg,
+							'Load from user flash, mode ' + parseInt(DAT2, this.PARSE_INT_HEX_MODE)
+						)
 					}
 				}
+			} else if (CMD == '6B') {
+				if (DAT1 == '00' || DAT1 == '01') {
+					// system mode standard/pip/dula 2k/switcher
+					if (this.isSystemModeValid(DAT3)) {
+						this.emitConnectionStatusOK()
+						this.deviceStatus.systemMode = DAT3
+						return this.logFeedback(redeableMsg, 'Mode ' + SYSTEM_MODE_NAMES[this.deviceStatus.systemMode])
+					}
+				} else if (DAT1 == '02' || DAT1 == '03') {
+					// layer
+					if (this.isLayerValid(DAT2)) {
+						this.emitConnectionStatusOK()
+						this.deviceStatus.layer = DAT2
+						return this.logFeedback(redeableMsg, 'Layer ' + LAYER_NAMES[this.deviceStatus.layer])
+					}
+				}
+			} else if (CMD == '72') {
+				if (DAT1 == '00' || DAT1 == '01') {
+					// Source switch (0x00)
+					// DAT2 - layer, DAT3 - source
+					if (this.isLayerValid(DAT2) && this.isSourceValid(DAT3)) {
+						this.emitConnectionStatusOK()
+						if (DAT2 == LAYER_A) {
+							this.deviceStatus.sources.layerA.sourceId = DAT3
+						} else {
+							this.deviceStatus.sources.layerB.sourceId = DAT3
+						}
+						return this.logFeedback(redeableMsg, 'Source on ' + LAYER_NAMES[DAT2] + ' is ' + SOURCE_SIGNALS_NAMES[DAT3])
+					}
+				}
+			} else if (CMD == '74') {
+				if (DAT1 == '00' || DAT1 == '01') {
+					let readedResolution = '0x' + DAT3
+					if (this.isResolutionValid(readedResolution))
+						if (DAT2 == '00') {
+							this.emitConnectionStatusOK()
+							this.deviceStatus.output.resolution1 = readedResolution
+							return this.logFeedback(redeableMsg, 'Output resolution 1: ' + this.getResolutionName(readedResolution))
+						} else if (DAT2 == '01') {
+							this.emitConnectionStatusOK()
+							this.deviceStatus.output.resolution2 = readedResolution
+							return this.logFeedback(redeableMsg, 'Output resolution 2: ' + this.getResolutionName(readedResolution))
+						}
+				}
+			} else if (CMD == '75') {
+				if (DAT1 == '00' || DAT1 == '01') {
+					// Freeze/Live
+					if (DAT2 == '01') {
+						// why DAT2 == '01'? id ont know
+						if (this.isFreezeStatusValid(DAT3)) {
+							this.emitConnectionStatusOK()
+							this.deviceStatus.freezeStatus = DAT3
+							return this.logFeedback(redeableMsg, 'Freeze status: ' + FREEZE_NAMES[this.deviceStatus.freezeStatus])
+						}
+					}
+				} else if (DAT1 == '14' || DAT1 == '15') {
+					// H Mirror
+					if (this.isLayerValid(DAT2)) {
+						let layer = DAT2 == LAYER_A ? this.deviceStatus.sources.layerA : this.deviceStatus.sources.layerB
+						if (this.isMirrorStatusValid(DAT3)) {
+							this.emitConnectionStatusOK()
+							layer.hMirror = DAT3
+							return this.logFeedback(redeableMsg, 'H Mirror: ' + MIRROR_NAMES[DAT3] + ' on ' + LAYER_NAMES[DAT2])
+						}
+					}
+				} else if (DAT1 == '18' || DAT1 == '19') {
+					// V Mirror
+					if (this.isLayerValid(DAT2)) {
+						let layer = DAT2 == LAYER_A ? this.deviceStatus.sources.layerA : this.deviceStatus.sources.layerB
+						if (this.isMirrorStatusValid(DAT3)) {
+							this.emitConnectionStatusOK()
+							layer.vMirror = DAT3
+							return this.logFeedback(redeableMsg, 'V Mirror: ' + MIRROR_NAMES[DAT3] + ' on ' + LAYER_NAMES[DAT2])
+						}
+					}
+				}
 			}
+		} catch (ex) {
+			console.log(ex)
 		}
 
 		this.myWarn('Unrecognized feedback message:' + redeableMsg)
@@ -445,3 +518,7 @@ module.exports.OUTPUT2 = OUTPUT2
 module.exports.FREEZE_NAMES = FREEZE_NAMES
 module.exports.FREEZE_STATUS_FREEZE = FREEZE_STATUS_FREEZE
 module.exports.FREEZE_STATUS_LIVE = FREEZE_STATUS_LIVE
+
+module.exports.MIRROR_STATUS_ON = MIRROR_STATUS_ON
+module.exports.MIRROR_STATUS_OFF = MIRROR_STATUS_OFF
+module.exports.MIRROR_NAMES = MIRROR_NAMES

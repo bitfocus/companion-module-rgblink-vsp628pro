@@ -103,9 +103,9 @@ class SourceSwitchManager {
 			],
 			callback: (feedback) => {
 				if (feedback.options.layer == LAYER_A) {
-					return this.getApiConnector().deviceStatus.source.layerA == feedback.options.source
+					return this.getApiConnector().deviceStatus.sources.layerA.sourceId == feedback.options.source
 				} else if (feedback.options.layer == LAYER_B) {
-					return this.getApiConnector().deviceStatus.source.layerB == feedback.options.source
+					return this.getApiConnector().deviceStatus.sources.layerB.sourceId == feedback.options.source
 				} else {
 					this.myModule.log('warn', 'Bad layer configured? This must be fixed by developer...')
 					return false
