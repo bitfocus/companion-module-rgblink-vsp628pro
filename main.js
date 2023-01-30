@@ -8,6 +8,7 @@ const SystemModeManager = require('./managers/SystemModeManager')
 const LayerManager = require('./managers/LayerManager')
 const SourceSwitchManager = require('./managers/SourceSwitchManager')
 const OutputResolutionManager = require('./managers/OutputResolutionManager')
+const FreezeManager = require('./managers/FreezeManager')
 
 class VSP628ProModuleInstance extends InstanceBase {
 	apiConnector = new RGBLinkVSP628ProConnector()
@@ -29,6 +30,7 @@ class VSP628ProModuleInstance extends InstanceBase {
 			this.managers.push(new UserFlashManager(this))
 			this.managers.push(new OutputResolutionManager(this))
 			this.managers.push(new SystemModeManager(this))
+			this.managers.push(new FreezeManager(this))
 			this.managers.push(new LayerManager(this))
 			this.managers.push(new FrontPanelManager(this))
 

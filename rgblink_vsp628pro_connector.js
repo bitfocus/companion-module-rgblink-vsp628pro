@@ -127,6 +127,12 @@ const OUTPUT_NAMES = []
 OUTPUT_NAMES[OUTPUT1] = 'Out 1'
 OUTPUT_NAMES[OUTPUT2] = 'Out 2'
 
+const FREEZE_STATUS_FREEZE = '01'
+const FREEZE_STATUS_LIVE = '00'
+const FREEZE_NAMES = []
+FREEZE_NAMES[FREEZE_STATUS_LIVE] = 'Live'
+FREEZE_NAMES[FREEZE_STATUS_FREEZE] = 'Freeze'
+
 class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 	EVENT_NAME_ON_DEVICE_STATE_CHANGED = 'on_device_state_changed'
 
@@ -146,6 +152,7 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			resolution1: undefined,
 			resolution2: undefined,
 		},
+		freezeStatus: undefined,
 	}
 
 	constructor(host, port, polling) {
@@ -163,7 +170,7 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 	}
 
 	sendConnectMessage() {
-		//this.sendCommand('68', '66', '01' /*Connect*/, '00', '00')
+		this.sendCommand('68', '66', '01' /*Connect*/, '00', '00')
 	}
 
 	sendDisconnectMessage() {
@@ -178,6 +185,10 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		this.sendCommand('72', '01', '01', '00', '00') // [OK] Read input on layer B
 		this.sendCommand('74', '01', '00', '00', '00') // [TEST] Read output resolution on OUT1
 		this.sendCommand('74', '01', '01', '00', '00') // [TEST] Read output resolution on OUT2
+		this.sendCommand('75', '01', '01', '00', '00') // [TEST] Read freeze/live
+
+		//this.sendCommand('75', '11', '00', '00', '00') // feedback 75 11 00 80 07 // bad example for freeze live....
+		//this.sendCommand('75', '11', '01', '00', '00') // feedback 75 11 01 80 02
 	}
 
 	sendSetFrontPanelLockStatus(status) {
@@ -296,6 +307,18 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		return outputCode in OUTPUT_NAMES
 	}
 
+	isFreezeStatusValid(freezeStatus) {
+		return freezeStatus in FREEZE_NAMES
+	}
+
+	sendSetFreezeStatus(freezeStatus) {
+		if (this.isFreezeStatusValid(freezeStatus)) {
+			this.sendCommand('75', '00', '01' /*???*/, freezeStatus, '00')
+		} else {
+			this.myWarn('Wrong freezeStatus code: ' + freezeStatus)
+		}
+	}
+
 	consumeFeedback(ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4) {
 		let redeableMsg = [ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4].join(' ')
 		// this.myLog(redeableMsg)
@@ -367,6 +390,18 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 						return this.logFeedback(redeableMsg, 'Output resolution 2: ' + this.getResolutionName(readedResolution))
 					}
 			}
+		} else if (CMD == '75') {
+			if (DAT1 == '00' || DAT1 == '01') {
+				// Freeze/Live
+				if (DAT2 == '01') {
+					// why DAT2 == '01'? id ont know
+					if (this.isFreezeStatusValid(DAT3)) {
+						this.emitConnectionStatusOK()
+						this.deviceStatus.freezeStatus = DAT3
+						return this.logFeedback(redeableMsg, 'Freeze status: ' + FREEZE_NAMES[this.deviceStatus.freezeStatus])
+					}
+				}
+			}
 		}
 
 		this.myWarn('Unrecognized feedback message:' + redeableMsg)
@@ -406,3 +441,7 @@ module.exports.OUTPUT_RESOLUTION_1920_1080P_50FPS
 module.exports.OUTPUT_NAMES = OUTPUT_NAMES
 module.exports.OUTPUT1 = OUTPUT1
 module.exports.OUTPUT2 = OUTPUT2
+
+module.exports.FREEZE_NAMES = FREEZE_NAMES
+module.exports.FREEZE_STATUS_FREEZE = FREEZE_STATUS_FREEZE
+module.exports.FREEZE_STATUS_LIVE = FREEZE_STATUS_LIVE
