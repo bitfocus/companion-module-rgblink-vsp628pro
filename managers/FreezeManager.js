@@ -13,7 +13,7 @@ for (let id in FREEZE_NAMES) {
 	})
 }
 
-class LayerManager {
+class FreezeManager {
 	myModule
 	apiConnector = new RGBLinkVSP628ProConnector()
 
@@ -116,4 +116,4 @@ class LayerManager {
 	}
 }
 
-module.exports = LayerManager
+module.exports = FreezeManager

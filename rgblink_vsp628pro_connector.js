@@ -139,6 +139,14 @@ const MIRROR_NAMES = []
 MIRROR_NAMES[MIRROR_STATUS_ON] = 'On'
 MIRROR_NAMES[MIRROR_STATUS_OFF] = 'Off'
 
+const ROTATE_90_OFF = '00'
+const ROTATE_90_LEFT = '01'
+const ROTATE_90_RIGHT = '02'
+const ROTATE_90_NAMES = []
+ROTATE_90_NAMES[ROTATE_90_OFF] = 'Off (no ratation)'
+ROTATE_90_NAMES[ROTATE_90_LEFT] = 'Left 90°'
+ROTATE_90_NAMES[ROTATE_90_RIGHT] = 'Right 90°'
+
 class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 	EVENT_NAME_ON_DEVICE_STATE_CHANGED = 'on_device_state_changed'
 
@@ -155,11 +163,13 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 				sourceId: undefined,
 				hMirror: undefined,
 				vMirror: undefined,
+				rotation: undefined,
 			},
 			layerB: {
 				sourceId: undefined,
 				hMirror: undefined,
 				vMirror: undefined,
+				rotation: undefined,
 			},
 		},
 		output: {
@@ -204,6 +214,8 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		this.sendCommand('75', '19', '00', '00', '00') // [OK] Read V Mirror for layer A
 		this.sendCommand('75', '15', '01', '00', '00') // [OK] Read H Mirror for layer B
 		this.sendCommand('75', '19', '01', '00', '00') // [OK] Read V Mirror for layer B
+		this.sendCommand('75', '17', '00', '00', '00') // [OK] Read rotate
+		this.sendCommand('75', '17', '01', '00', '00') // [OK] Read rotate
 
 		//this.sendCommand('75', '11', '00', '00', '00') // feedback 75 11 00 80 07 // bad example for freeze live....
 		//this.sendCommand('75', '11', '01', '00', '00') // feedback 75 11 01 80 02
@@ -365,6 +377,22 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		}
 	}
 
+	isRotationValid(rotationCode) {
+		return rotationCode in ROTATE_90_NAMES
+	}
+
+	sendSetRotation(rotationCode, layer) {
+		if (this.isLayerValid(layer)) {
+			if (this.isRotationValid(rotationCode)) {
+				this.sendCommand('75', '16', layer, rotationCode, '00')
+			} else {
+				this.myWarn('Wrong rotation code: ' + rotationCode)
+			}
+		} else {
+			this.myWarn('Wrong layer code: ' + layer)
+		}
+	}
+
 	consumeFeedback(ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4) {
 		let redeableMsg = [ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4].join(' ')
 		// this.myLog(redeableMsg)
@@ -471,6 +499,16 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 							return this.logFeedback(redeableMsg, 'V Mirror: ' + MIRROR_NAMES[DAT3] + ' on ' + LAYER_NAMES[DAT2])
 						}
 					}
+				} else if (DAT1 == '16' || DAT1 == '17') {
+					// Rotate 90°
+					if (this.isLayerValid(DAT2)) {
+						let layer = DAT2 == LAYER_A ? this.deviceStatus.sources.layerA : this.deviceStatus.sources.layerB
+						if (this.isRotationValid(DAT3)) {
+							this.emitConnectionStatusOK()
+							layer.rotation = DAT3
+							return this.logFeedback(redeableMsg, 'Rotation  on ' + LAYER_NAMES[DAT2] + ' is: ' + MIRROR_NAMES[DAT3])
+						}
+					}
 				}
 			}
 		} catch (ex) {
@@ -522,3 +560,6 @@ module.exports.FREEZE_STATUS_LIVE = FREEZE_STATUS_LIVE
 module.exports.MIRROR_STATUS_ON = MIRROR_STATUS_ON
 module.exports.MIRROR_STATUS_OFF = MIRROR_STATUS_OFF
 module.exports.MIRROR_NAMES = MIRROR_NAMES
+
+module.exports.ROTATE_90_NAMES = ROTATE_90_NAMES
+module.exports.ROTATE_90_LEFT = ROTATE_90_LEFT
