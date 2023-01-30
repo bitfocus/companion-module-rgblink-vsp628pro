@@ -38,7 +38,7 @@ class UserFlashManager {
 				{
 					id: 'mode',
 					type: 'dropdown',
-					label: 'Mode number',
+					label: 'Bank number',
 					choices: MODE_NUMBER_CHOICES,
 					default: '1',
 				},
@@ -54,7 +54,7 @@ class UserFlashManager {
 				{
 					id: 'mode',
 					type: 'dropdown',
-					label: 'Mode number',
+					label: 'Bank number',
 					choices: MODE_NUMBER_CHOICES,
 					default: '1',
 				},
@@ -83,7 +83,7 @@ class UserFlashManager {
 				{
 					id: 'mode',
 					type: 'dropdown',
-					label: 'Mode number',
+					label: 'Bank number',
 					choices: MODE_NUMBER_CHOICES,
 					default: '1',
 				},
@@ -101,7 +101,7 @@ class UserFlashManager {
 				{
 					id: 'mode',
 					type: 'dropdown',
-					label: 'Mode number',
+					label: 'Bank number',
 					choices: MODE_NUMBER_CHOICES,
 					default: '1',
 				},
@@ -119,10 +119,10 @@ class UserFlashManager {
 		for (let i = 1; i <= 21; i++) {
 			presets.push({
 				type: 'button',
-				category: 'Flash - Load/Save mode',
-				name: 'Save to flash, mode ' + i, // A name for the preset. Shown to the user when they hover over it
+				category: 'Flash - Load/Save bank',
+				name: 'Save to flash, bank ' + i, // A name for the preset. Shown to the user when they hover over it
 				style: {
-					text: 'Save\nmode ' + i,
+					text: 'Save\nbank ' + i,
 					size: 'auto',
 					color: colorsSingle.WHITE,
 					bgcolor: colorsSingle.BLACK,
@@ -148,10 +148,10 @@ class UserFlashManager {
 			})
 			presets.push({
 				type: 'button',
-				category: 'Flash - Load/Save mode',
-				name: 'Load from flash, mode ' + i, // A name for the preset. Shown to the user when they hover over it
+				category: 'Flash - Load/Save bank',
+				name: 'Load from flash, bank ' + i, // A name for the preset. Shown to the user when they hover over it
 				style: {
-					text: 'Load\nmode ' + i,
+					text: 'Load\nbank ' + i,
 					size: 'auto',
 					color: colorsSingle.WHITE,
 					bgcolor: colorsSingle.BLACK,

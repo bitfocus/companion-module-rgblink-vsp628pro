@@ -7,6 +7,7 @@ const UserFlashManager = require('./managers/UserFlashManager')
 const SystemModeManager = require('./managers/SystemModeManager')
 const LayerManager = require('./managers/LayerManager')
 const SourceSwitchManager = require('./managers/SourceSwitchManager')
+const OutputResolutionManager = require('./managers/OutputResolutionManager')
 
 class VSP628ProModuleInstance extends InstanceBase {
 	apiConnector = new RGBLinkVSP628ProConnector()
@@ -26,6 +27,7 @@ class VSP628ProModuleInstance extends InstanceBase {
 
 			this.managers.push(new SourceSwitchManager(this))
 			this.managers.push(new UserFlashManager(this))
+			this.managers.push(new OutputResolutionManager(this))
 			this.managers.push(new SystemModeManager(this))
 			this.managers.push(new LayerManager(this))
 			this.managers.push(new FrontPanelManager(this))
@@ -108,7 +110,7 @@ class VSP628ProModuleInstance extends InstanceBase {
 
 	updatePresets() {
 		let presets = []
-		for (var i = 0; i < this.managers.length; i++) {
+		for (let i = 0; i < this.managers.length; i++) {
 			presets = presets.concat(this.managers[i].getPresets())
 		}
 

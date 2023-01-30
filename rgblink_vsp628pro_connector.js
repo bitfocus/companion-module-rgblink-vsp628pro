@@ -46,6 +46,87 @@ SOURCE_SIGNALS_NAMES[SOURCE_SIGNAL_7] = 'custom7' //custom
 SOURCE_SIGNALS_NAMES[SOURCE_SIGNAL_8] = 'custom8' //custom
 SOURCE_SIGNALS_NAMES[SOURCE_SIGNAL_LOGO_TP] = 'LOGO'
 
+const OUTPUT_RESOLUTION_1920_1080P_50FPS = '0x35'
+const OUTPUT_RESOLUTIONS_NAMES = []
+OUTPUT_RESOLUTIONS_NAMES['0x00'] = 'NTSC(480i)720'
+OUTPUT_RESOLUTIONS_NAMES['0x01'] = 'PAL(576i)720'
+OUTPUT_RESOLUTIONS_NAMES['0x02'] = 'NTSC(480i)1440'
+OUTPUT_RESOLUTIONS_NAMES['0x03'] = 'PAL(576i)1440'
+OUTPUT_RESOLUTIONS_NAMES['0x04'] = '720x580p'
+OUTPUT_RESOLUTIONS_NAMES['0x05'] = '720x676p'
+OUTPUT_RESOLUTIONS_NAMES['0x06'] = '640x480 @60'
+OUTPUT_RESOLUTIONS_NAMES['0x07'] = '640x480 @75'
+OUTPUT_RESOLUTIONS_NAMES['0x08'] = '640x480 @85'
+OUTPUT_RESOLUTIONS_NAMES['0x09'] = '800x600 @50'
+OUTPUT_RESOLUTIONS_NAMES['0x0A'] = '800x600 @60'
+OUTPUT_RESOLUTIONS_NAMES['0x0B'] = '800x600 @75'
+OUTPUT_RESOLUTIONS_NAMES['0x0C'] = '800x600 @85'
+OUTPUT_RESOLUTIONS_NAMES['0x0D'] = '1024x768 @50'
+OUTPUT_RESOLUTIONS_NAMES['0x0E'] = '1024x768 @60'
+OUTPUT_RESOLUTIONS_NAMES['0x0F'] = '1024x768 @75'
+OUTPUT_RESOLUTIONS_NAMES['0x10'] = '1024x768 @85'
+OUTPUT_RESOLUTIONS_NAMES['0x11'] = '1152x864 @75'
+OUTPUT_RESOLUTIONS_NAMES['0x12'] = '1280x768 @60'
+OUTPUT_RESOLUTIONS_NAMES['0x13'] = '1280x768 @75'
+OUTPUT_RESOLUTIONS_NAMES['0x14'] = '1280x800 @50'
+OUTPUT_RESOLUTIONS_NAMES['0x15'] = '1280x800 @60'
+OUTPUT_RESOLUTIONS_NAMES['0x16'] = '1280x960 @50'
+OUTPUT_RESOLUTIONS_NAMES['0x17'] = '1280x960 @60'
+OUTPUT_RESOLUTIONS_NAMES['0x18'] = '1280x960 @85'
+OUTPUT_RESOLUTIONS_NAMES['0x19'] = '1280x1024 @50'
+OUTPUT_RESOLUTIONS_NAMES['0x1A'] = '1280x1024 @60'
+OUTPUT_RESOLUTIONS_NAMES['0x1B'] = '1280x1024 @75'
+OUTPUT_RESOLUTIONS_NAMES['0x1C'] = '1280x1024 @85'
+OUTPUT_RESOLUTIONS_NAMES['0x1D'] = '1360x768 @60'
+OUTPUT_RESOLUTIONS_NAMES['0x1E'] = '1366x768 @60'
+OUTPUT_RESOLUTIONS_NAMES['0x1F'] = '1440x900 @60'
+OUTPUT_RESOLUTIONS_NAMES['0x20'] = '1440x900 @75'
+OUTPUT_RESOLUTIONS_NAMES['0x21'] = '1440x900 @85'
+OUTPUT_RESOLUTIONS_NAMES['0x22'] = '1400x1050 @50'
+OUTPUT_RESOLUTIONS_NAMES['0x23'] = '1400x1050 @60'
+OUTPUT_RESOLUTIONS_NAMES['0x24'] = '1400x1050 @75'
+OUTPUT_RESOLUTIONS_NAMES['0x25'] = '1600x1200 @50'
+OUTPUT_RESOLUTIONS_NAMES['0x26'] = '1600x1200 @60'
+OUTPUT_RESOLUTIONS_NAMES['0x27'] = '1680x1050 @60'
+OUTPUT_RESOLUTIONS_NAMES['0x28'] = '1280x720p @23.98'
+OUTPUT_RESOLUTIONS_NAMES['0x29'] = '1280x720p @24'
+OUTPUT_RESOLUTIONS_NAMES['0x2A'] = '1280x720p @25'
+OUTPUT_RESOLUTIONS_NAMES['0x2B'] = '1280x720p @29.97'
+OUTPUT_RESOLUTIONS_NAMES['0x2C'] = '1280x720p @30'
+OUTPUT_RESOLUTIONS_NAMES['0x2D'] = '1280x720p @60'
+OUTPUT_RESOLUTIONS_NAMES['0x2E'] = '1280x720p @59.94'
+OUTPUT_RESOLUTIONS_NAMES['0x2F'] = '1280x720p @60'
+OUTPUT_RESOLUTIONS_NAMES['0x30'] = '1920x1080p @23.98'
+OUTPUT_RESOLUTIONS_NAMES['0x31'] = '1920x1080p @24'
+OUTPUT_RESOLUTIONS_NAMES['0x32'] = '1920x1080p @25'
+OUTPUT_RESOLUTIONS_NAMES['0x33'] = '1920x1080p @29.97'
+OUTPUT_RESOLUTIONS_NAMES['0x34'] = '1920x1080p @30'
+OUTPUT_RESOLUTIONS_NAMES[OUTPUT_RESOLUTION_1920_1080P_50FPS] = '1920x1080p @50'
+OUTPUT_RESOLUTIONS_NAMES['0x36'] = '1920x1080p @59.94'
+OUTPUT_RESOLUTIONS_NAMES['0x37'] = '1920x1080p @60'
+OUTPUT_RESOLUTIONS_NAMES['0x38'] = '1920x1080PsF @23.98'
+OUTPUT_RESOLUTIONS_NAMES['0x39'] = '1920x1080PsF @24'
+OUTPUT_RESOLUTIONS_NAMES['0x3A'] = '1920x1080PsF @25'
+OUTPUT_RESOLUTIONS_NAMES['0x3B'] = '1920x1080PsF @29.97'
+OUTPUT_RESOLUTIONS_NAMES['0x3C'] = '1920x1080PsF @30'
+OUTPUT_RESOLUTIONS_NAMES['0x3D'] = '1920x1080i @50'
+OUTPUT_RESOLUTIONS_NAMES['0x3E'] = '1920x1080i @59.94'
+OUTPUT_RESOLUTIONS_NAMES['0x3F'] = '1920x1080i @60'
+OUTPUT_RESOLUTIONS_NAMES['0x40'] = '1920x1200p @50'
+OUTPUT_RESOLUTIONS_NAMES['0x41'] = '1920x1200p @60'
+OUTPUT_RESOLUTIONS_NAMES['0x42'] = '2048x1152p @60'
+OUTPUT_RESOLUTIONS_NAMES['0x43'] = '2560x816 @60'
+OUTPUT_RESOLUTIONS_NAMES['0x44'] = '1536x1536p @60'
+OUTPUT_RESOLUTIONS_NAMES['0x45'] = 'NTSC(480i)2880'
+OUTPUT_RESOLUTIONS_NAMES['0x46'] = 'PAL(576i)2880'
+OUTPUT_RESOLUTIONS_NAMES['0x47'] = '1920x1080x60.0 #'
+
+const OUTPUT1 = '00'
+const OUTPUT2 = '01'
+const OUTPUT_NAMES = []
+OUTPUT_NAMES[OUTPUT1] = 'Out 1'
+OUTPUT_NAMES[OUTPUT2] = 'Out 2'
+
 class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 	EVENT_NAME_ON_DEVICE_STATE_CHANGED = 'on_device_state_changed'
 
@@ -60,6 +141,10 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		source: {
 			layerA: undefined,
 			layerB: undefined,
+		},
+		output: {
+			resolution1: undefined,
+			resolution2: undefined,
 		},
 	}
 
@@ -89,8 +174,10 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		this.sendCommand('68', '03', '00', '00', '00') // [OK] read the panel state (is locked or unlocked)
 		this.sendCommand('6B', '01', '00', '00', '00') // [OK] read the system mode (standard/pip/dual 2k/switcher...)
 		this.sendCommand('6B', '03', '00', '00', '00') // [OK] Read which layer selected (0x03)
-		this.sendCommand('72', '01', '00', '00', '00') // [TEST] Read input on layer A
-		this.sendCommand('72', '01', '01', '00', '00') // [TEST] Read input on layer B
+		this.sendCommand('72', '01', '00', '00', '00') // [OK] Read input on layer A
+		this.sendCommand('72', '01', '01', '00', '00') // [OK] Read input on layer B
+		this.sendCommand('74', '01', '00', '00', '00') // [TEST] Read output resolution on OUT1
+		this.sendCommand('74', '01', '01', '00', '00') // [TEST] Read output resolution on OUT2
 	}
 
 	sendSetFrontPanelLockStatus(status) {
@@ -166,7 +253,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 	}
 
 	sendSourceSignalOnLayer(sourceSignal, layer) {
-		console.log('sendSourceSignalOnLayer:' + sourceSignal + ',' + layer)
 		if (this.isLayerValid(layer)) {
 			if (this.isSourceValid(sourceSignal)) {
 				this.sendCommand('72', '00', layer, sourceSignal, '00')
@@ -180,6 +266,34 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 
 	isSourceValid(source) {
 		return source in SOURCE_SIGNALS_NAMES
+	}
+
+	sendSetResolution(resolution, output) {
+		if (this.isResolutionValid(resolution)) {
+			if (this.isOutputValid(output)) {
+				this.sendCommand('74', '00' /*write*/, output, resolution.slice(-2), '00')
+			} else {
+				this.myWarn('Wrong output id: ' + output)
+			}
+		} else {
+			this.myWarn('Wrong resolution: ' + resolution)
+		}
+	}
+
+	isResolutionValid(resolutionCode) {
+		return resolutionCode in OUTPUT_RESOLUTIONS_NAMES
+	}
+
+	getResolutionName(resolutionCode) {
+		if (this.isResolutionValid(resolutionCode)) {
+			return OUTPUT_RESOLUTIONS_NAMES[resolutionCode]
+		} else {
+			this.myWarn('Wrong resolution code: ' + resolutionCode)
+		}
+	}
+
+	isOutputValid(outputCode) {
+		return outputCode in OUTPUT_NAMES
 	}
 
 	consumeFeedback(ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4) {
@@ -236,11 +350,22 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 					} else {
 						this.deviceStatus.source.layerB = DAT3
 					}
-					return this.logFeedback(
-						redeableMsg,
-						'Source on ' + LAYER_NAMES[DAT2] + ' is ' + SOURCE_SIGNALS_NAMES[DAT3]
-					)
+					return this.logFeedback(redeableMsg, 'Source on ' + LAYER_NAMES[DAT2] + ' is ' + SOURCE_SIGNALS_NAMES[DAT3])
 				}
+			}
+		} else if (CMD == '74') {
+			if (DAT1 == '00' || DAT1 == '01') {
+				let readedResolution = '0x' + DAT3
+				if (this.isResolutionValid(readedResolution))
+					if (DAT2 == '00') {
+						this.emitConnectionStatusOK()
+						this.deviceStatus.output.resolution1 = readedResolution
+						return this.logFeedback(redeableMsg, 'Output resolution 1: ' + this.getResolutionName(readedResolution))
+					} else if (DAT2 == '01') {
+						this.emitConnectionStatusOK()
+						this.deviceStatus.output.resolution2 = readedResolution
+						return this.logFeedback(redeableMsg, 'Output resolution 2: ' + this.getResolutionName(readedResolution))
+					}
 			}
 		}
 
@@ -274,3 +399,10 @@ module.exports.LAYER_B = LAYER_B
 
 module.exports.SOURCE_SIGNALS_NAMES = SOURCE_SIGNALS_NAMES
 module.exports.SOURCE_SIGNAL_HDMI = SOURCE_SIGNAL_HDMI
+
+module.exports.OUTPUT_RESOLUTIONS_NAMES = OUTPUT_RESOLUTIONS_NAMES
+module.exports.OUTPUT_RESOLUTION_1920_1080P_50FPS
+
+module.exports.OUTPUT_NAMES = OUTPUT_NAMES
+module.exports.OUTPUT1 = OUTPUT1
+module.exports.OUTPUT2 = OUTPUT2
