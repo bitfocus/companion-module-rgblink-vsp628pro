@@ -110,6 +110,7 @@ class RGBLinkApiConnector {
 	eventsListeners = []
 	nextSn = 0
 	intervalHandler1s = undefined
+	intervalHandler100ms = undefined
 	createTime = new Date().getTime()
 	sentCommandStorage = new SentCommandStorage()
 	pollingQueue = []
@@ -123,6 +124,9 @@ class RGBLinkApiConnector {
 		this.intervalHandler1s = setInterval(function () {
 			self.onEveryOneSecond()
 		}, 1000)
+		this.intervalHandler100ms = setInterval(function () {
+			self.onEvery100Miliseconds()
+		}, 100)
 	}
 
 	enableLog(logProvider) {
@@ -159,6 +163,12 @@ class RGBLinkApiConnector {
 				this.myWarn('Please replace askAboutStatus function with getPollingCommands')
 				this.askAboutStatus()
 			}
+
+		}
+	}
+
+	onEvery100Miliseconds() {
+		if (this.config.polling) {
 			this.doPolling()
 		}
 	}
@@ -258,6 +268,7 @@ class RGBLinkApiConnector {
 			this.socket.destroy()
 		}
 		clearInterval(this.intervalHandler1s)
+		clearInterval(this.intervalHandler100ms)
 	}
 
 	on = function (event, listener) {
