@@ -139,7 +139,7 @@ class VSP628ProModuleInstance extends InstanceBase {
 		})
 		this.updateStatus(InstanceStatus.Connecting)
 		this.apiConnector.sendConnectMessage()
-		this.apiConnector.askAboutStatus()
+		//this.apiConnector.askAboutStatus()
 	}
 
 	checkAllFeedbacks() {

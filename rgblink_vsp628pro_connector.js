@@ -1,4 +1,4 @@
-const RGBLinkApiConnector = require('./rgblinkapiconnector')
+const { RGBLinkApiConnector, PollingCommand } = require('./rgblinkapiconnector')
 
 const FRONT_PANEL_LOCKED = '01'
 const FRONT_PANEL_UNLOCKED = '00'
@@ -194,72 +194,73 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 	}
 
 	sendConnectMessage() {
-		this.sendCommand('68', '66', '01' /*Connect*/, '00', '00')
+		//this.sendCommand('68', '66', '01' /*Connect*/, '00', '00')
 	}
 
 	sendDisconnectMessage() {
 		//this.sendCommand('68', '66', '00' /*Disconnect*/, '00', '00')
 	}
 
-	askAboutStatus() {
-		this.sendCommand('68', '03', '00', '00', '00') // [OK] read the panel state (is locked or unlocked)
-		this.sendCommand('6B', '01', '00', '00', '00') // [OK] read the system mode (standard/pip/dual 2k/switcher...)
-		this.sendCommand('6B', '03', '00', '00', '00') // [OK] Read which layer selected (0x03)
-		this.sendCommand('72', '01', '00', '00', '00') // [OK] Read input on layer A
-		this.sendCommand('72', '01', '01', '00', '00') // [OK] Read input on layer B
-		this.sendCommand('74', '01', '00', '00', '00') // [TEST] Read output resolution on OUT1
-		this.sendCommand('74', '01', '01', '00', '00') // [TEST] Read output resolution on OUT2
-		this.sendCommand('75', '01', '01', '00', '00') // [OK] Read freeze/live
-		this.sendCommand('75', '15', '00', '00', '00') // [OK] Read H Mirror for layer A
-		this.sendCommand('75', '19', '00', '00', '00') // [OK] Read V Mirror for layer A
-		this.sendCommand('75', '15', '01', '00', '00') // [OK] Read H Mirror for layer B
-		this.sendCommand('75', '19', '01', '00', '00') // [OK] Read V Mirror for layer B
-		this.sendCommand('75', '17', '00', '00', '00') // [OK] Read rotate
-		this.sendCommand('75', '17', '01', '00', '00') // [OK] Read rotate
+	getPollingCommands() {
+		let commands = []
 
-		// this.sendCommand('80', '1F', '00', '00', '00') // read red brightness
-		// this.sendCommand('80', '1F', '01', '00', '00')
-		// this.sendCommand('80', '21', '00', '00', '00') // read green brightness
-		// this.sendCommand('80', '21', '01', '00', '00')
-		// this.sendCommand('80', '23', '00', '00', '00') // read blue brightness
-		// this.sendCommand('80', '23', '01', '00', '00')
+		commands.push(new PollingCommand('68', '03', '00', '00', '00')) // [OK] read the panel state (is locked or unlocked)
+		commands.push(new PollingCommand('6B', '01', '00', '00', '00')) // [OK] read the system mode (standard/pip/dual 2k/switcher...)
+		commands.push(new PollingCommand('6B', '03', '00', '00', '00')) // [OK] Read which layer selected (0x03)
+		commands.push(new PollingCommand('72', '01', '00', '00', '00')) // [OK] Read input on layer A
+		commands.push(new PollingCommand('72', '01', '01', '00', '00')) // [OK] Read input on layer B
+		commands.push(new PollingCommand('74', '01', '00', '00', '00')) // [TEST] Read output resolution on OUT1
+		commands.push(new PollingCommand('74', '01', '01', '00', '00')) // [TEST] Read output resolution on OUT2
+		commands.push(new PollingCommand('75', '01', '01', '00', '00')) // [OK] Read freeze/live
+		commands.push(new PollingCommand('75', '15', '00', '00', '00')) // [OK] Read H Mirror for layer A
+		commands.push(new PollingCommand('75', '19', '00', '00', '00')) // [OK] Read V Mirror for layer A
+		commands.push(new PollingCommand('75', '15', '01', '00', '00')) // [OK] Read H Mirror for layer B
+		commands.push(new PollingCommand('75', '19', '01', '00', '00')) // [OK] Read V Mirror for layer B
+		commands.push(new PollingCommand('75', '17', '00', '00', '00')) // [OK] Read rotate
+		commands.push(new PollingCommand('75', '17', '01', '00', '00')) // [OK] Read rotate
 
-		// this.sendCommand('80', '25', '00', '00', '00') // read red contrast
-		// this.sendCommand('80', '25', '01', '00', '00')
-		// this.sendCommand('80', '27', '00', '00', '00') // read green contrast
-		// this.sendCommand('80', '27', '01', '00', '00')
-		// this.sendCommand('80', '29', '00', '00', '00') // read blue contrast
-		// this.sendCommand('80', '29', '01', '00', '00')
+		commands.push(new PollingCommand('80', '1F', '00', '00', '00')) // read red brightness
+		commands.push(new PollingCommand('80', '1F', '01', '00', '00'))
+		commands.push(new PollingCommand('80', '21', '00', '00', '00')) // read green brightness
+		commands.push(new PollingCommand('80', '21', '01', '00', '00'))
+		commands.push(new PollingCommand('80', '23', '00', '00', '00')) // read blue brightness
+		commands.push(new PollingCommand('80', '23', '01', '00', '00'))
 
-		// this.sendCommand('80', '05', '00', '00', '00') // read chroma
-		// this.sendCommand('80', '05', '01', '00', '00')
-		// this.sendCommand('80', '07', '00', '00', '00') // read hue
-		// this.sendCommand('80', '07', '01', '00', '00')
-		// this.sendCommand('80', '09', '00', '00', '00') // read color temperature
-		// this.sendCommand('80', '09', '01', '00', '00')
-		// this.sendCommand('80', '1B', '00', '00', '00') // read gamma
-		// this.sendCommand('80', '1B', '01', '00', '00')
-		// this.sendCommand('80', '0B', '00', '00', '00') // read horizontal sharpness
-		// this.sendCommand('80', '0B', '01', '00', '00')
-		// this.sendCommand('80', '0D', '00', '00', '00') // read vertical sharpness
-		// this.sendCommand('80', '0D', '01', '00', '00')
-		// this.sendCommand('80', '0F', '00', '00', '00') // read horizontal noise reduction
-		// this.sendCommand('80', '0F', '01', '00', '00')
-		// this.sendCommand('80', '11', '00', '00', '00') // read vertical noise reduction
-		// this.sendCommand('80', '11', '01', '00', '00')
-		// this.sendCommand('80', '13', '00', '00', '00') // read temporal nr
-		// this.sendCommand('80', '13', '01', '00', '00')
-		// this.sendCommand('80', '15', '00', '00', '00') // read block nr
-		// this.sendCommand('80', '15', '01', '00', '00')
-		// this.sendCommand('80', '17', '00', '00', '00') // read mosquito nr
-		// this.sendCommand('80', '17', '01', '00', '00')
-		// this.sendCommand('80', '19', '00', '00', '00') // read combing nr
-		// this.sendCommand('80', '19', '01', '00', '00')
-		// this.sendCommand('80', '2B', '00', '00', '00') // read invert
-		// this.sendCommand('80', '2B', '01', '00', '00')
+		commands.push(new PollingCommand('80', '25', '00', '00', '00')) // read red contrast
+		commands.push(new PollingCommand('80', '25', '01', '00', '00'))
+		commands.push(new PollingCommand('80', '27', '00', '00', '00')) // read green contrast
+		commands.push(new PollingCommand('80', '27', '01', '00', '00'))
+		commands.push(new PollingCommand('80', '29', '00', '00', '00')) // read blue contrast
+		commands.push(new PollingCommand('80', '29', '01', '00', '00'))
 
-		//this.sendCommand('75', '11', '00', '00', '00') // feedback 75 11 00 80 07 // bad example for freeze live....
-		//this.sendCommand('75', '11', '01', '00', '00') // feedback 75 11 01 80 02
+		commands.push(new PollingCommand('80', '05', '00', '00', '00')) // read chroma
+		commands.push(new PollingCommand('80', '05', '01', '00', '00'))
+		commands.push(new PollingCommand('80', '07', '00', '00', '00')) // read hue
+		commands.push(new PollingCommand('80', '07', '01', '00', '00'))
+		commands.push(new PollingCommand('80', '09', '00', '00', '00')) // read color temperature
+		commands.push(new PollingCommand('80', '09', '01', '00', '00'))
+		commands.push(new PollingCommand('80', '1B', '00', '00', '00')) // read gamma
+		commands.push(new PollingCommand('80', '1B', '01', '00', '00'))
+		commands.push(new PollingCommand('80', '0B', '00', '00', '00')) // read horizontal sharpness
+		commands.push(new PollingCommand('80', '0B', '01', '00', '00'))
+		commands.push(new PollingCommand('80', '0D', '00', '00', '00')) // read vertical sharpness
+		commands.push(new PollingCommand('80', '0D', '01', '00', '00'))
+		commands.push(new PollingCommand('80', '0F', '00', '00', '00')) // read horizontal noise reduction
+		commands.push(new PollingCommand('80', '0F', '01', '00', '00'))
+		commands.push(new PollingCommand('80', '11', '00', '00', '00')) // read vertical noise reduction
+		commands.push(new PollingCommand('80', '11', '01', '00', '00'))
+		commands.push(new PollingCommand('80', '13', '00', '00', '00')) // read temporal nr
+		commands.push(new PollingCommand('80', '13', '01', '00', '00'))
+		commands.push(new PollingCommand('80', '15', '00', '00', '00')) // read block nr
+		commands.push(new PollingCommand('80', '15', '01', '00', '00'))
+		commands.push(new PollingCommand('80', '17', '00', '00', '00')) // read mosquito nr
+		commands.push(new PollingCommand('80', '17', '01', '00', '00'))
+		commands.push(new PollingCommand('80', '19', '00', '00', '00')) // read combing nr
+		commands.push(new PollingCommand('80', '19', '01', '00', '00'))
+		commands.push(new PollingCommand('80', '2B', '00', '00', '00')) // read invert
+		commands.push(new PollingCommand('80', '2B', '01', '00', '00'))
+
+		return commands
 	}
 
 	sendSetFrontPanelLockStatus(status) {

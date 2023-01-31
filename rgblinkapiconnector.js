@@ -2,6 +2,82 @@
 
 const { UDPHelper } = require('@companion-module/base')
 
+const MAX_COMMANDS_WAITING_FOR_RESPONSES_FOR_POLLING = 5
+
+class PollingCommand {
+	CMD
+	DAT1
+	DAT2
+	DAT3
+	DAT4
+
+	constructor(CMD, DAT1, DAT2, DAT3, DAT4) {
+		if (CMD.length != 2 || DAT1.length != 2 || DAT2.length != 2 || DAT3.length != 2 || DAT4.length != 2) {
+			console.log(`Bad command params: CMD:'${CMD}' DAT1:'${DAT1}' DAT2:'${DAT2}' DAT3:'${DAT3}' DAT4:'${DAT4}'`)
+		}
+
+		this.CMD = CMD
+		this.DAT1 = DAT1
+		this.DAT2 = DAT2
+		this.DAT3 = DAT3
+		this.DAT4 = DAT4
+	}
+}
+
+class SentCommand {
+	sentDate
+	command
+	constructor(command, sentDate) {
+		this.command = command
+		this.sentDate = sentDate
+	}
+}
+
+class SentCommandStorage {
+	commandsSentWithoutResponse = []
+
+	registerSentCommand(cmd) {
+		//console.log('OUT ' + cmd)
+		this.internalRememberCommand(cmd)
+	}
+
+	registerReceivedCommand(cmd) {
+		//console.log('IN  ' + cmd)
+		this.internalCompareResponseWithSentCommands(cmd)
+	}
+
+	getCountElementsWithoutRespond() {
+		return this.commandsSentWithoutResponse.length
+	}
+
+	internalRememberCommand(cmd) {
+		//console.log('Storing ' + cmd + '...')
+		this.commandsSentWithoutResponse.push(new SentCommand(cmd, new Date().getTime()))
+	}
+
+	internalCompareResponseWithSentCommands(receivedCmd) {
+		let receivedCmdId = this.internalGetCmdId(receivedCmd)
+		let found = false
+		for (let i = 0; i < this.commandsSentWithoutResponse.length; i++) {
+			let sent = this.commandsSentWithoutResponse[i]
+			let sentCmdId = this.internalGetCmdId(sent.command)
+			if (receivedCmdId == sentCmdId) {
+				//console.log('Found sent command for response ' + receivedCmd)
+				found = true
+				this.commandsSentWithoutResponse.splice(i, 1)
+				break
+			}
+		}
+		if (!found) {
+			console.log('No sent command matching received response: ' + receivedCmd)
+		}
+	}
+
+	internalGetCmdId(cmd) {
+		return cmd.substr(2, 6)
+	}
+}
+
 class RGBLinkApiConnector {
 	EVENT_NAME_ON_DATA_API = 'on_data'
 	EVENT_NAME_ON_DATA_API_NOT_STANDARD_LENGTH = 'on_data_not_standard_length'
@@ -22,6 +98,8 @@ class RGBLinkApiConnector {
 	lastDataSentTime = undefined
 	lastDataReceivedTime = undefined
 	createTime = new Date().getTime()
+	sentCommandStorage = new SentCommandStorage()
+	pollingQueue = []
 
 	constructor(host, port, polling) {
 		this.config.polling = polling
@@ -64,7 +142,51 @@ class RGBLinkApiConnector {
 
 	onEveryOneSecond() {
 		if (this.config.polling) {
-			this.askAboutStatus()
+			if (typeof this.askAboutStatus === 'function') {
+				this.myWarn('Please replace askAboutStatus function with getPollingCommands')
+				this.askAboutStatus()
+			}
+			this.doPolling()
+		}
+	}
+
+	doPolling() {
+		// send polling commands - which asks about device status
+		// don't wait for more than 5 commands (rgblink requirements described near SN field in API specification)
+
+		try {
+			let commandsRequested = false
+			for (let i = 0; i < MAX_COMMANDS_WAITING_FOR_RESPONSES_FOR_POLLING; i++) {
+				if (this.sentCommandStorage.getCountElementsWithoutRespond() >= 5) {
+					// do not send more polling commands, if we wait for 5 or more responses
+					this.myDebug(
+						'Skip more polling commands, current queue:' +
+							this.sentCommandStorage.getCountElementsWithoutRespond() +
+							' added new ' +
+							i
+					)
+					break
+				}
+
+				// if there is not polling commands, try to generate a new one, but only once
+				if (this.pollingQueue.length == 0 && commandsRequested == false) {
+					this.pollingQueue = this.getPollingCommands()
+					commandsRequested = true
+				}
+				if (this.pollingQueue.length == 0) {
+					// if still no polling commands, stop doing anything
+					break
+				}
+
+				let command = this.pollingQueue.shift()
+				this.sendCommand(command.CMD, command.DAT1, command.DAT2, command.DAT3, command.DAT4)
+				if (this.pollingQueue.length == 0 && commandsRequested == true) {
+					// all sent, now more for sent, break
+					break
+				}
+			}
+		} catch (ex) {
+			console.log(ex)
 		}
 	}
 
@@ -113,7 +235,7 @@ class RGBLinkApiConnector {
 			})
 
 			this.socket.on('data', (message) => {
-				this.myDebug('FEEDBACK: ' + message)
+				//this.myDebug('FEEDBACK: ' + message)
 				this.onDataReceived(message)
 			})
 		}
@@ -128,7 +250,7 @@ class RGBLinkApiConnector {
 			}
 			this.lastDataReceivedTime = new Date().getTime()
 		} catch (ex) {
-			this.myDebug(ex)
+			console.log(ex)
 		}
 	}
 
@@ -168,6 +290,7 @@ class RGBLinkApiConnector {
 						// self.myLog('sent?')
 					})
 					this.myDebug('SENT    : ' + cmd)
+					this.sentCommandStorage.registerSentCommand(cmd)
 					this.lastDataSentTime = new Date().getTime()
 					this.onAfterDataSent()
 				} else {
@@ -175,7 +298,7 @@ class RGBLinkApiConnector {
 				}
 			}
 		} catch (ex) {
-			this.myDebug(ex)
+			console.log(ex)
 		}
 	}
 
@@ -183,8 +306,10 @@ class RGBLinkApiConnector {
 		this.config.polling = polling
 	}
 
-	askAboutStatus() {
-		// to overrirde during implementation with specific device
+	getPollingCommands() {
+		// to override during implementation with specific device
+		// should return array of PollingCommand objects
+		return []
 	}
 
 	sendCommand(CMD, DAT1, DAT2, DAT3, DAT4) {
@@ -217,6 +342,7 @@ class RGBLinkApiConnector {
 
 	validateReceivedDataAndEmitIfValid(message) {
 		let redeableMsg = message.toString('utf8').toUpperCase()
+		this.sentCommandStorage.registerReceivedCommand(redeableMsg)
 
 		// Checksum checking
 		let checksumInMessage = redeableMsg.substr(16, 2)
@@ -265,4 +391,5 @@ class RGBLinkApiConnector {
 	}
 }
 
-module.exports = RGBLinkApiConnector
+module.exports.RGBLinkApiConnector = RGBLinkApiConnector
+module.exports.PollingCommand = PollingCommand
