@@ -462,6 +462,7 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		}
 	}
 
+	// this is really spaghetti code, and need refactor in future
 	consumeFeedback(ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4) {
 		let redeableMsg = [ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4].join(' ')
 		// this.myLog(redeableMsg)
@@ -579,12 +580,170 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 						}
 					}
 				}
+			} else if (CMD == '80') {
+				if (
+					[
+						'1E',
+						'1F',
+						'20',
+						'21',
+						'22',
+						'23',
+						'24',
+						'25',
+						'26',
+						'27',
+						'28',
+						'29',
+						'04',
+						'05',
+						'06',
+						'07',
+						'08',
+						'09',
+						'1A',
+						'1B',
+						'0A',
+						'0B',
+						'0C',
+						'0D',
+						'0E',
+						'0F',
+						'10',
+						'11',
+						'12',
+						'13',
+						'14',
+						'15',
+						'16',
+						'17',
+						'18',
+						'19',
+						'2A',
+						'2B',
+					].includes(DAT1)
+				) {
+					if (this.isLayerValid(DAT2)) {
+						let layer = DAT2 == LAYER_A ? this.deviceStatus.sources.layerA : this.deviceStatus.sources.layerB
+						let value = this.convert2ByteHexToSignedNumber(DAT4 + DAT3)
+						let onLayerMsgPart = 'On ' + LAYER_NAMES[DAT2] + ' '
+						switch (DAT1) {
+							case '1E':
+							case '1F':
+								this.emitConnectionStatusOK()
+								layer.brightness.red = value
+								return this.logFeedback(redeableMsg, onLayerMsgPart + ' brightness red is: ' + value)
+							case '20':
+							case '21':
+								this.emitConnectionStatusOK()
+								layer.brightness.green = value
+								return this.logFeedback(redeableMsg, onLayerMsgPart + ' brightness green is: ' + value)
+							case '22':
+							case '23':
+								this.emitConnectionStatusOK()
+								layer.brightness.blue = value
+								return this.logFeedback(redeableMsg, onLayerMsgPart + ' brightness blue is: ' + value)
+							case '24':
+							case '25':
+								this.emitConnectionStatusOK()
+								layer.contrast.red = value
+								return this.logFeedback(redeableMsg, onLayerMsgPart + ' contrast red is: ' + value)
+							case '26':
+							case '27':
+								this.emitConnectionStatusOK()
+								layer.contrast.green = value
+								return this.logFeedback(redeableMsg, onLayerMsgPart + ' contrast green is: ' + value)
+							case '28':
+							case '29':
+								this.emitConnectionStatusOK()
+								layer.contrast.blue = value
+								return this.logFeedback(redeableMsg, onLayerMsgPart + ' contrast blue is: ' + value)
+							case '04':
+							case '05':
+								this.emitConnectionStatusOK()
+								layer.chroma = value
+								return this.logFeedback(redeableMsg, onLayerMsgPart + ' chroma is: ' + value)
+							case '06':
+							case '07':
+								this.emitConnectionStatusOK()
+								layer.hue = value
+								return this.logFeedback(redeableMsg, onLayerMsgPart + ' hue is: ' + value)
+							case '08':
+							case '09':
+								this.emitConnectionStatusOK()
+								layer.colorTemperature = value
+								return this.logFeedback(redeableMsg, onLayerMsgPart + ' color temperature is: ' + value)
+							case '1A':
+							case '1B':
+								this.emitConnectionStatusOK()
+								layer.gamma = value
+								return this.logFeedback(redeableMsg, onLayerMsgPart + ' gamma is: ' + value)
+							case '0A':
+							case '0B':
+								this.emitConnectionStatusOK()
+								layer.sharpness.horizontal = value
+								return this.logFeedback(redeableMsg, onLayerMsgPart + ' sharpness horizontal is: ' + value)
+							case '0C':
+							case '0D':
+								this.emitConnectionStatusOK()
+								layer.sharpness.vertical = value
+								return this.logFeedback(redeableMsg, onLayerMsgPart + ' sharpness vertical is: ' + value)
+							case '0E':
+							case '0F':
+								this.emitConnectionStatusOK()
+								layer.noiseReduction.horizontal = value
+								return this.logFeedback(redeableMsg, onLayerMsgPart + ' noise reduction horizontal is: ' + value)
+							case '10':
+							case '11':
+								this.emitConnectionStatusOK()
+								layer.noiseReduction.vertical = value
+								return this.logFeedback(redeableMsg, onLayerMsgPart + ' noise reduction vertical is: ' + value)
+							case '12':
+							case '13':
+								this.emitConnectionStatusOK()
+								layer.noiseReduction.temporalNR = value
+								return this.logFeedback(redeableMsg, onLayerMsgPart + ' noise reduction temporal NR is: ' + value)
+							case '14':
+							case '15':
+								this.emitConnectionStatusOK()
+								layer.noiseReduction.blockNR = value
+								return this.logFeedback(redeableMsg, onLayerMsgPart + ' noise reduction block NR is: ' + value)
+							case '16':
+							case '17':
+								this.emitConnectionStatusOK()
+								layer.noiseReduction.mosquitoNR = value
+								return this.logFeedback(redeableMsg, onLayerMsgPart + ' noise reduction mosquito NR is: ' + value)
+							case '18':
+							case '19':
+								this.emitConnectionStatusOK()
+								layer.noiseReduction.combingNR = value
+								return this.logFeedback(redeableMsg, onLayerMsgPart + ' noise reduction combing NR is: ' + value)
+							case '2A':
+							case '2B':
+								this.emitConnectionStatusOK()
+								layer.invert = value
+								return this.logFeedback(redeableMsg, onLayerMsgPart + ' invert is: ' + value)
+						}
+					}
+				}
 			}
 		} catch (ex) {
 			console.log(ex)
 		}
 
 		this.myWarn('Unrecognized feedback message:' + redeableMsg)
+	}
+
+	// signed FFBF is -65
+	convert2ByteHexToSignedNumber(hexValue = 'FFBF') {
+		if (!(hexValue.startsWith('0x') | hexValue.startsWith('0X'))) {
+			hexValue = '0x' + hexValue
+		}
+		let value = parseInt(hexValue, this.PARSE_INT_HEX_MODE)
+		if ((value & 0x8000) > 0) {
+			value = value - 0x10000
+		}
+		return value
 	}
 
 	emitConnectionStatusOK() {
