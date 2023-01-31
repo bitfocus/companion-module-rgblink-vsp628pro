@@ -93,6 +93,20 @@ class SentCommandStorage {
 	}
 }
 
+class ApiConfig {
+	host = undefined
+	port = undefined
+	polling = undefined
+	logEveryCommand = undefined
+
+	constructor(host, port, polling, logEveryCommand) {
+		this.host = host
+		this.port = port
+		this.polling = polling
+		this.logEveryCommand = logEveryCommand
+	}
+}
+
 class RGBLinkApiConnector {
 	EVENT_NAME_ON_DATA_API = 'on_data'
 	EVENT_NAME_ON_DATA_API_NOT_STANDARD_LENGTH = 'on_data_not_standard_length'
@@ -101,10 +115,7 @@ class RGBLinkApiConnector {
 	EVENT_NAME_ON_CONNECTION_ERROR = 'on_connection_error'
 	PARSE_INT_HEX_MODE = 16
 
-	config = {
-		host: undefined,
-		polling: undefined,
-	}
+	config = new ApiConfig()
 	logProvider
 	socket // = new UDPHelper()
 	eventsListeners = []
@@ -115,11 +126,11 @@ class RGBLinkApiConnector {
 	sentCommandStorage = new SentCommandStorage()
 	pollingQueue = []
 
-	constructor(host, port, polling) {
-		this.config.polling = polling
+	constructor(config) {
+		this.config = config
 		var self = this
-		if (host) {
-			this.createSocket(host, port)
+		if (this.config && this.config.host) {
+			this.createSocket(this.config.host, this.config.port)
 		}
 		this.intervalHandler1s = setInterval(function () {
 			self.onEveryOneSecond()
@@ -158,7 +169,7 @@ class RGBLinkApiConnector {
 	}
 
 	onEveryOneSecond() {
-		if (this.config.polling) {
+		if (this.config && this.config.polling) {
 			if (typeof this.askAboutStatus === 'function') {
 				this.myWarn('Please replace askAboutStatus function with getPollingCommands')
 				this.askAboutStatus()
@@ -168,7 +179,7 @@ class RGBLinkApiConnector {
 	}
 
 	onEvery100Miliseconds() {
-		if (this.config.polling) {
+		if (this.config && this.config.polling) {
 			this.doPolling()
 		}
 	}
@@ -228,6 +239,7 @@ class RGBLinkApiConnector {
 	createSocket(host, port) {
 		this.myDebug('RGBLinkApiConnector: creating socket ' + host + ':' + port + '...')
 		this.config.host = host
+		this.config.port = port
 
 		if (this.socket !== undefined) {
 			this.socket.destroy()
@@ -401,3 +413,4 @@ class RGBLinkApiConnector {
 
 module.exports.RGBLinkApiConnector = RGBLinkApiConnector
 module.exports.PollingCommand = PollingCommand
+module.exports.ApiConfig = ApiConfig

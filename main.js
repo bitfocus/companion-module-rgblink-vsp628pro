@@ -10,6 +10,7 @@ const SourceSwitchManager = require('./managers/SourceSwitchManager')
 const OutputResolutionManager = require('./managers/OutputResolutionManager')
 const FreezeManager = require('./managers/FreezeManager')
 const MirrorAndRotateManager = require('./managers/MirrorAndRotateManager')
+const { ApiConfig } = require('./rgblinkapiconnector')
 
 class VSP628ProModuleInstance extends InstanceBase {
 	apiConnector = new RGBLinkVSP628ProConnector()
@@ -123,7 +124,7 @@ class VSP628ProModuleInstance extends InstanceBase {
 
 	initApiConnector() {
 		let self = this
-		this.apiConnector = new RGBLinkVSP628ProConnector(this.config.host, this.config.port, this.config.polling)
+		this.apiConnector = new RGBLinkVSP628ProConnector(new ApiConfig(this.config.host, this.config.port, this.config.polling, this.config.logEveryCommand))
 		this.apiConnector.enableLog(this)
 		this.apiConnector.on(this.apiConnector.EVENT_NAME_ON_DEVICE_STATE_CHANGED, () => {
 			self.checkAllFeedbacks()
