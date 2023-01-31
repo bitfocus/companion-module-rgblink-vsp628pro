@@ -3,6 +3,7 @@
 const { UDPHelper } = require('@companion-module/base')
 
 const MAX_COMMANDS_WAITING_FOR_RESPONSES_FOR_POLLING = 5
+const COMMANDS_EXPIRE_TIME_SECONDS = 10
 
 class PollingCommand {
 	CMD
@@ -48,6 +49,20 @@ class SentCommandStorage {
 
 	getCountElementsWithoutRespond() {
 		return this.commandsSentWithoutResponse.length
+	}
+
+	deleteExpiredCommands() {
+		let currentMs = new Date().getTime()
+		let deleted = []
+		//for (let i = 0; i < this.commandsSentWithoutResponse.length; i++) {
+		let i = this.commandsSentWithoutResponse.length
+		while (i--) {
+			let sent = this.commandsSentWithoutResponse[i]
+			if (sent.sentDate + COMMANDS_EXPIRE_TIME_SECONDS * 1000 < currentMs) {
+				deleted = deleted.concat(this.commandsSentWithoutResponse.splice(i, 1))
+			}
+		}
+		return deleted
 	}
 
 	internalRememberCommand(cmd) {
@@ -153,18 +168,30 @@ class RGBLinkApiConnector {
 	doPolling() {
 		// send polling commands - which asks about device status
 		// don't wait for more than 5 commands (rgblink requirements described near SN field in API specification)
+		// remove commands with no response in 10 seconds
+
+		let deleted = this.sentCommandStorage.deleteExpiredCommands()
+		if (deleted.length > 0) {
+			deleted.forEach((sendCom) => {
+				this.myWarn('Expired command (without response):' + sendCom.command)
+				this.emit(
+					this.EVENT_NAME_ON_CONNECTION_WARNING,
+					'The device did not respond to the command within ' + COMMANDS_EXPIRE_TIME_SECONDS + ' seconds'
+				)
+			})
+		}
 
 		try {
 			let commandsRequested = false
 			for (let i = 0; i < MAX_COMMANDS_WAITING_FOR_RESPONSES_FOR_POLLING; i++) {
 				if (this.sentCommandStorage.getCountElementsWithoutRespond() >= 5) {
 					// do not send more polling commands, if we wait for 5 or more responses
-					this.myDebug(
-						'Skip more polling commands, current queue:' +
-							this.sentCommandStorage.getCountElementsWithoutRespond() +
-							' added new ' +
-							i
-					)
+					// this.myDebug(
+					// 	'Skip more polling commands, current queue:' +
+					// 	this.sentCommandStorage.getCountElementsWithoutRespond() +
+					// 	' added new ' +
+					// 	i
+					// )
 					break
 				}
 
