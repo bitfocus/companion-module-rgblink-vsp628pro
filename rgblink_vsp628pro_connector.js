@@ -147,37 +147,63 @@ ROTATE_90_NAMES[ROTATE_90_OFF] = 'Off (no ratation)'
 ROTATE_90_NAMES[ROTATE_90_LEFT] = 'Left 90°'
 ROTATE_90_NAMES[ROTATE_90_RIGHT] = 'Right 90°'
 
+class LayerParameters {
+	sourceId
+	hMirror
+	vMirror
+	rotation
+	brightness = {
+		red: undefined,
+		green: undefined,
+		blue: undefined,
+	}
+	contrast = {
+		red: undefined,
+		green: undefined,
+		blue: undefined,
+	}
+	chroma
+	hue
+	colorTemperature
+	gamma
+	sharpness = {
+		horizontal: undefined,
+		vertical: undefined,
+	}
+	noiseReduction = {
+		horizontal: undefined,
+		vertical: undefined,
+		temporalNR: undefined,
+		blockNR: undefined,
+		mosquitoNR: undefined,
+		combingNR: undefined,
+	}
+	invert
+}
+
+class DeviceStatus {
+	frontPanelLocked
+	flashUserMode = {
+		lastSavedMode: undefined,
+		lastLoadedMode: undefined,
+	}
+	systemMode
+	layer
+	sources = {
+		layerA: new LayerParameters(),
+		layerB: new LayerParameters(),
+	}
+	output = {
+		resolution1: undefined,
+		resolution2: undefined,
+	}
+	freezeStatus
+}
+
 class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 	EVENT_NAME_ON_DEVICE_STATE_CHANGED = 'on_device_state_changed'
 
-	deviceStatus = {
-		frontPanelLocked: undefined,
-		flashUserMode: {
-			lastSavedMode: undefined,
-			lastLoadedMode: undefined,
-		},
-		systemMode: undefined,
-		layer: undefined,
-		sources: {
-			layerA: {
-				sourceId: undefined,
-				hMirror: undefined,
-				vMirror: undefined,
-				rotation: undefined,
-			},
-			layerB: {
-				sourceId: undefined,
-				hMirror: undefined,
-				vMirror: undefined,
-				rotation: undefined,
-			},
-		},
-		output: {
-			resolution1: undefined,
-			resolution2: undefined,
-		},
-		freezeStatus: undefined,
-	}
+	deviceStatus = new DeviceStatus()
 
 	constructor(host, port, polling) {
 		super(host, port, polling)
@@ -194,7 +220,8 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 	}
 
 	sendConnectMessage() {
-		//this.sendCommand('68', '66', '01' /*Connect*/, '00', '00')
+		this.sendCommand('68', '66', '01' /*Connect*/, '00', '00')
+		this.deviceStatus = new DeviceStatus()
 	}
 
 	sendDisconnectMessage() {
@@ -566,6 +593,8 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 }
 
 module.exports.RGBLinkVSP628ProConnector = RGBLinkVSP628ProConnector
+module.exports.LayerParameters = LayerParameters
+module.exports.DeviceStatus = DeviceStatus
 
 module.exports.FRONT_PANEL_LOCKED = FRONT_PANEL_LOCKED
 module.exports.FRONT_PANEL_UNLOCKED = FRONT_PANEL_UNLOCKED
