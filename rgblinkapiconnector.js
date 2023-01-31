@@ -65,6 +65,10 @@ class SentCommandStorage {
 		return deleted
 	}
 
+	deleteAll() {
+		this.commandsSentWithoutResponse = []
+	}
+
 	internalRememberCommand(cmd) {
 		//console.log('Storing ' + cmd + '...')
 		this.commandsSentWithoutResponse.push(new SentCommand(cmd, new Date().getTime()))
@@ -178,12 +182,10 @@ class RGBLinkApiConnector {
 	}
 
 	onEvery100Miliseconds() {
-		if (this.config && this.config.polling) {
-			this.doPolling()
-		}
+		this.doPolling()
 	}
 
-	doPolling() {
+	doPolling(force = false) {
 		// send polling commands - which asks about device status
 		// don't wait for more than 5 commands (rgblink requirements described near SN field in API specification)
 		// remove commands with no response in 10 seconds
@@ -215,7 +217,10 @@ class RGBLinkApiConnector {
 
 				// if there is not polling commands, try to generate a new one, but only once
 				if (this.pollingQueue.length == 0 && commandsRequested == false) {
-					this.pollingQueue = this.getPollingCommands()
+					// Do NOT get new commands, if polling is disabled (hower, commands in queue will be send, this help to get device status after connect)
+					if ((this.config && this.config.polling) || force) {
+						this.pollingQueue = this.getPollingCommands()
+					}
 					commandsRequested = true
 				}
 				if (this.pollingQueue.length == 0) {
@@ -233,6 +238,11 @@ class RGBLinkApiConnector {
 		} catch (ex) {
 			console.log(ex)
 		}
+	}
+
+	readStatusAfterConnect() {
+		this.sentCommandStorage.deleteAll()
+		this.doPolling(true)
 	}
 
 	createSocket(host, port) {
@@ -261,6 +271,8 @@ class RGBLinkApiConnector {
 				}
 				this.onDataReceived(message)
 			})
+			this.sendConnectMessage()
+			this.readStatusAfterConnect()
 		}
 	}
 

@@ -151,8 +151,6 @@ class VSP628ProModuleInstance extends InstanceBase {
 			self.updateStatus(InstanceStatus.UnknownError, message)
 		})
 		this.updateStatus(InstanceStatus.Connecting)
-		this.apiConnector.sendConnectMessage()
-		//this.apiConnector.askAboutStatus()
 	}
 
 	checkAllFeedbacks() {
