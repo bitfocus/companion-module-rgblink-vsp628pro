@@ -109,9 +109,7 @@ class RGBLinkApiConnector {
 	socket // = new UDPHelper()
 	eventsListeners = []
 	nextSn = 0
-	intervalHandler = undefined
-	lastDataSentTime = undefined
-	lastDataReceivedTime = undefined
+	intervalHandler1s = undefined
 	createTime = new Date().getTime()
 	sentCommandStorage = new SentCommandStorage()
 	pollingQueue = []
@@ -122,7 +120,7 @@ class RGBLinkApiConnector {
 		if (host) {
 			this.createSocket(host, port)
 		}
-		this.intervalHandler = setInterval(function () {
+		this.intervalHandler1s = setInterval(function () {
 			self.onEveryOneSecond()
 		}, 1000)
 	}
@@ -217,29 +215,6 @@ class RGBLinkApiConnector {
 		}
 	}
 
-	onAfterDataSent() {
-		try {
-			var sentDate = new Date().getTime()
-			var self = this
-
-			;(function (sentDate2) {
-				setTimeout(function () {
-					if (self.config.polling) {
-						if (typeof self.lastDataReceivedTime === 'undefined' || self.lastDataReceivedTime < sentDate2) {
-							let lastReceiveOrStart = self.lastDataReceivedTime || self.createTime
-							self.emit(
-								self.EVENT_NAME_ON_CONNECTION_WARNING,
-								'The device has not sent any data since ' + new Date(lastReceiveOrStart).toLocaleTimeString()
-							)
-						}
-					}
-				}, 2000)
-			})(sentDate)
-		} catch (ex) {
-			this.myDebug(ex)
-		}
-	}
-
 	createSocket(host, port) {
 		this.myDebug('RGBLinkApiConnector: creating socket ' + host + ':' + port + '...')
 		this.config.host = host
@@ -248,8 +223,6 @@ class RGBLinkApiConnector {
 			this.socket.destroy()
 			delete this.socket
 		}
-		this.lastDataSentTime = undefined
-		this.lastDataReceivedTime = undefined
 
 		if (host) {
 			this.socket = new UDPHelper(host, port)
@@ -275,7 +248,6 @@ class RGBLinkApiConnector {
 			} else {
 				this.validateReceivedDataAndEmitIfValid(message)
 			}
-			this.lastDataReceivedTime = new Date().getTime()
 		} catch (ex) {
 			console.log(ex)
 		}
@@ -285,7 +257,7 @@ class RGBLinkApiConnector {
 		if (this.socket !== undefined) {
 			this.socket.destroy()
 		}
-		clearInterval(this.intervalHandler)
+		clearInterval(this.intervalHandler1s)
 	}
 
 	on = function (event, listener) {
@@ -318,8 +290,6 @@ class RGBLinkApiConnector {
 					})
 					this.myDebug('SENT    : ' + cmd)
 					this.sentCommandStorage.registerSentCommand(cmd)
-					this.lastDataSentTime = new Date().getTime()
-					this.onAfterDataSent()
 				} else {
 					this.myDebug("Can't send command, socket undefined!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 				}
