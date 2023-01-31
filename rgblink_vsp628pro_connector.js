@@ -462,6 +462,134 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		}
 	}
 
+	isBrightnessValid(brightness) {
+		return brightness >= -512 && brightness <= 512
+	}
+
+	sendSetBrightnessRed(layer, brightness) {
+		if (this.isLayerValid(layer)) {
+			if (this.isBrightnessValid(brightness)) {
+				var [DAT3, DAT4] = this.internalGetDat34ForDecValue(brightness)
+				this.sendCommand('80', '1E', layer, DAT3, DAT4)
+			} else {
+				this.myWarn('Wrong brightness : ' + brightness)
+			}
+		} else {
+			this.myWarn('Wrong layer code: ' + layer)
+		}
+	}
+
+	sendSetBrightnessGreen(layer, brightness) {
+		if (this.isLayerValid(layer)) {
+			if (this.isBrightnessValid(brightness)) {
+				var [DAT3, DAT4] = this.internalGetDat34ForDecValue(brightness)
+				this.sendCommand('80', '20', layer, DAT3, DAT4)
+			} else {
+				this.myWarn('Wrong brightness : ' + brightness)
+			}
+		} else {
+			this.myWarn('Wrong layer code: ' + layer)
+		}
+	}
+
+	sendSetBrightnessBlue(layer, brightness) {
+		if (this.isLayerValid(layer)) {
+			if (this.isBrightnessValid(brightness)) {
+				var [DAT3, DAT4] = this.internalGetDat34ForDecValue(brightness)
+				this.sendCommand('80', '22', layer, DAT3, DAT4)
+			} else {
+				this.myWarn('Wrong brightness : ' + brightness)
+			}
+		} else {
+			this.myWarn('Wrong layer code: ' + layer)
+		}
+	}
+
+	sendSetContrastRed(layer, contrast) {
+		if (this.isLayerValid(layer)) {
+			if (this.isContrastValid(contrast)) {
+				var [DAT3, DAT4] = this.internalGetDat34ForDecValue(contrast)
+				this.sendCommand('80', '24', layer, DAT3, DAT4)
+			} else {
+				this.myWarn('Wrong contrast : ' + contrast)
+			}
+		} else {
+			this.myWarn('Wrong layer code: ' + layer)
+		}
+	}
+
+	sendSetContrastGreen(layer, contrast) {
+		if (this.isLayerValid(layer)) {
+			if (this.isContrastValid(contrast)) {
+				var [DAT3, DAT4] = this.internalGetDat34ForDecValue(contrast)
+				this.sendCommand('80', '26', layer, DAT3, DAT4)
+			} else {
+				this.myWarn('Wrong contrast : ' + contrast)
+			}
+		} else {
+			this.myWarn('Wrong layer code: ' + layer)
+		}
+	}
+
+	sendSetContrastBlue(layer, contrast) {
+		if (this.isLayerValid(layer)) {
+			if (this.isContrastValid(contrast)) {
+				var [DAT3, DAT4] = this.internalGetDat34ForDecValue(contrast)
+				this.sendCommand('80', '28', layer, DAT3, DAT4)
+			} else {
+				this.myWarn('Wrong contrast : ' + contrast)
+			}
+		} else {
+			this.myWarn('Wrong layer code: ' + layer)
+		}
+	}
+
+	sendSetChroma(layer, chromaValue) {
+		if (this.isLayerValid(layer)) {
+			if (this.isChromaValid(chromaValue)) {
+				var [DAT3, DAT4] = this.internalGetDat34ForDecValue(chromaValue)
+				this.sendCommand('80', '04', layer, DAT3, DAT4)
+			} else {
+				this.myWarn('Wrong chroma : ' + chromaValue)
+			}
+		} else {
+			this.myWarn('Wrong layer code: ' + layer)
+		}
+	}
+
+	sendSetHue(layer, hueValue) {
+		if (this.isLayerValid(layer)) {
+			if (this.isHueValid(hueValue)) {
+				var [DAT3, DAT4] = this.internalGetDat34ForDecValue(hueValue)
+				this.sendCommand('80', '06', layer, DAT3, DAT4)
+			} else {
+				this.myWarn('Wrong hue : ' + hueValue)
+			}
+		} else {
+			this.myWarn('Wrong layer code: ' + layer)
+		}
+	}
+
+	internalGetDat34ForDecValue(value) {
+		var hexValue = this.convertSignedNumberTo2ByteHex(value)
+		// little-endian - most-signicant byte on the right side (DAT4)
+		var DAT4 = hexValue.substr(0, 2)
+		var DAT3 = hexValue.substr(2, 2)
+		return [DAT3, DAT4]
+	}
+
+	isContrastValid(contrast) {
+		return contrast >= 0 && contrast <= 399
+	}
+
+	isChromaValid(chroma) {
+		return chroma >= 0 && chroma <= 399
+	}
+
+	isHueValid(hue) {
+		return hue >= -180 && hue <= 180
+	}
+
 	// this is really spaghetti code, and need refactor in future
 	consumeFeedback(ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4) {
 		let redeableMsg = [ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4].join(' ')
@@ -630,44 +758,68 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 						switch (DAT1) {
 							case '1E':
 							case '1F':
-								this.emitConnectionStatusOK()
-								layer.brightness.red = value
-								return this.logFeedback(redeableMsg, onLayerMsgPart + ' brightness red is: ' + value)
+								if (this.isBrightnessValid(value)) {
+									this.emitConnectionStatusOK()
+									layer.brightness.red = value
+									return this.logFeedback(redeableMsg, onLayerMsgPart + ' brightness red is: ' + value)
+								}
+								break
 							case '20':
 							case '21':
-								this.emitConnectionStatusOK()
-								layer.brightness.green = value
-								return this.logFeedback(redeableMsg, onLayerMsgPart + ' brightness green is: ' + value)
+								if (this.isBrightnessValid(value)) {
+									this.emitConnectionStatusOK()
+									layer.brightness.green = value
+									return this.logFeedback(redeableMsg, onLayerMsgPart + ' brightness green is: ' + value)
+								}
+								break
 							case '22':
 							case '23':
-								this.emitConnectionStatusOK()
-								layer.brightness.blue = value
-								return this.logFeedback(redeableMsg, onLayerMsgPart + ' brightness blue is: ' + value)
+								if (this.isBrightnessValid(value)) {
+									this.emitConnectionStatusOK()
+									layer.brightness.blue = value
+									return this.logFeedback(redeableMsg, onLayerMsgPart + ' brightness blue is: ' + value)
+								}
+								break
 							case '24':
 							case '25':
-								this.emitConnectionStatusOK()
-								layer.contrast.red = value
-								return this.logFeedback(redeableMsg, onLayerMsgPart + ' contrast red is: ' + value)
+								if (this.isContrastValid(value)) {
+									this.emitConnectionStatusOK()
+									layer.contrast.red = value
+									return this.logFeedback(redeableMsg, onLayerMsgPart + ' contrast red is: ' + value)
+								}
+								break
 							case '26':
 							case '27':
-								this.emitConnectionStatusOK()
-								layer.contrast.green = value
-								return this.logFeedback(redeableMsg, onLayerMsgPart + ' contrast green is: ' + value)
+								if (this.isContrastValid(value)) {
+									this.emitConnectionStatusOK()
+									layer.contrast.green = value
+									return this.logFeedback(redeableMsg, onLayerMsgPart + ' contrast green is: ' + value)
+								}
+								break
 							case '28':
 							case '29':
-								this.emitConnectionStatusOK()
-								layer.contrast.blue = value
-								return this.logFeedback(redeableMsg, onLayerMsgPart + ' contrast blue is: ' + value)
+								if (this.isContrastValid(value)) {
+									this.emitConnectionStatusOK()
+									layer.contrast.blue = value
+									return this.logFeedback(redeableMsg, onLayerMsgPart + ' contrast blue is: ' + value)
+								}
+								break
 							case '04':
 							case '05':
-								this.emitConnectionStatusOK()
-								layer.chroma = value
-								return this.logFeedback(redeableMsg, onLayerMsgPart + ' chroma is: ' + value)
+								if (this.isChromaValid(value)) {
+									this.emitConnectionStatusOK()
+									layer.chroma = value
+									return this.logFeedback(redeableMsg, onLayerMsgPart + ' chroma is: ' + value)
+								}
+								break
 							case '06':
 							case '07':
-								this.emitConnectionStatusOK()
-								layer.hue = value
-								return this.logFeedback(redeableMsg, onLayerMsgPart + ' hue is: ' + value)
+								if (this.isHueValid(value)) {
+									this.emitConnectionStatusOK()
+									layer.hue = value
+									return this.logFeedback(redeableMsg, onLayerMsgPart + ' hue is: ' + value)
+								}
+								break
 							case '08':
 							case '09':
 								this.emitConnectionStatusOK()
@@ -735,7 +887,7 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 	}
 
 	// signed FFBF is -65
-	convert2ByteHexToSignedNumber(hexValue = 'FFBF') {
+	convert2ByteHexToSignedNumber(hexValue /* = 'FFBF'*/) {
 		if (!(hexValue.startsWith('0x') | hexValue.startsWith('0X'))) {
 			hexValue = '0x' + hexValue
 		}
@@ -744,6 +896,18 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			value = value - 0x10000
 		}
 		return value
+	}
+
+	// -65 is 0xFFBF
+	convertSignedNumberTo2ByteHex(decimalValue /* = -65*/) {
+		if (decimalValue < 0) {
+			decimalValue = 0xffff + decimalValue + 1
+		}
+		let hexValue = decimalValue.toString(16).toUpperCase()
+		while (hexValue.length < 4) {
+			hexValue = '0' + hexValue
+		}
+		return hexValue
 	}
 
 	emitConnectionStatusOK() {

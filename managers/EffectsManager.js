@@ -1,0 +1,471 @@
+const ACTION_SET_EFFECT = 'set_effect'
+
+const FEEDBACK_SELECTED_EFFECT = 'feedback_selected_effect'
+
+const { CompanionOptionValues } = require('@companion-module/base')
+
+const { colorsStyle, colorsSingle } = require('./colors')
+const {
+	RGBLinkVSP628ProConnector,
+	LAYER_NAMES,
+	LAYER_A,
+	LAYER_B,
+	LayerParameters,
+} = require('../rgblink_vsp628pro_connector')
+
+const LAYER_NAMES_CHOICES = []
+for (let id in LAYER_NAMES) {
+	LAYER_NAMES_CHOICES.push({
+		id: id,
+		label: LAYER_NAMES[id],
+	})
+}
+
+const PRESETS_CATEGORY_NAME = 'Effects'
+
+const EFFECT_BRIGHTNESS_RED = 'brightness_red'
+const EFFECT_BRIGHTNESS_GREEN = 'brightness_green'
+const EFFECT_BRIGHTNESS_BLUE = 'brightness_blue'
+const EFFECT_CONTRAST_RED = 'contrast_red'
+const EFFECT_CONTRAST_GREEN = 'contrast_green'
+const EFFECT_CONTRAST_BLUE = 'contrast_blue'
+const EFFECT_CHROMA = 'chroma'
+const EFFECT_HUE = 'hue'
+const EFFECT_COLOR_TEMPERATURE = 'color_temperature'
+const EFFECT_GAMMA = 'gamma'
+const EFFECT_SHARPNESS_HORIZONTAL = 'sharpness_horizontal'
+const EFFECT_SHARPNESS_VERTICAL = 'sharpness_vertical'
+const EFFECT_NOISE_REDUCTION_HORIZONTAL = 'noise_reduction_horizontal'
+const EFFECT_NOISE_REDUCTION_VERTICAL = 'noise_reduction_vertical'
+const EFFECT_NOISE_REDUCTION_TEMPORAL_NR = 'noise_reduction_temporal_nr'
+const EFFECT_NOISE_REDUCTION_BLOCK_NR = 'noise_reduction_block_nr'
+const EFFECT_NOISE_REDUCTION_MOSQUITO_NR = 'noise_reduction_mosquito_nr'
+const EFFECT_NOISE_REDUCTION_COMBING_NR = 'noise_reduction_combing_nr'
+const EFFECT_FLIP_INVERT = 'flip'
+const EFFECT_NAMES = []
+EFFECT_NAMES[EFFECT_BRIGHTNESS_RED] = 'Brightness (red)'
+EFFECT_NAMES[EFFECT_BRIGHTNESS_GREEN] = 'Brightness (green)'
+EFFECT_NAMES[EFFECT_BRIGHTNESS_BLUE] = 'Brightness (blue)'
+EFFECT_NAMES[EFFECT_CONTRAST_RED] = 'Contrast (red)'
+EFFECT_NAMES[EFFECT_CONTRAST_GREEN] = 'Contrast (green)'
+EFFECT_NAMES[EFFECT_CONTRAST_BLUE] = 'Contrast (blue)'
+EFFECT_NAMES[EFFECT_CHROMA] = 'Chroma'
+EFFECT_NAMES[EFFECT_HUE] = 'Hue'
+EFFECT_NAMES[EFFECT_COLOR_TEMPERATURE] = 'Color temperature'
+EFFECT_NAMES[EFFECT_GAMMA] = 'Gamma'
+EFFECT_NAMES[EFFECT_SHARPNESS_HORIZONTAL] = 'Sharpness - horizontal'
+EFFECT_NAMES[EFFECT_SHARPNESS_VERTICAL] = 'Sharpness - vertical'
+EFFECT_NAMES[EFFECT_NOISE_REDUCTION_HORIZONTAL] = 'Noise reduction - horizontal'
+EFFECT_NAMES[EFFECT_NOISE_REDUCTION_VERTICAL] = 'Noise reduction - vertical'
+EFFECT_NAMES[EFFECT_NOISE_REDUCTION_TEMPORAL_NR] = 'Noise reduction - temporal nr'
+EFFECT_NAMES[EFFECT_NOISE_REDUCTION_BLOCK_NR] = 'Noise reduction - block nr'
+EFFECT_NAMES[EFFECT_NOISE_REDUCTION_MOSQUITO_NR] = 'Noise reduction - mosquito nr'
+EFFECT_NAMES[EFFECT_NOISE_REDUCTION_COMBING_NR] = 'Noise reduction - combing nr'
+EFFECT_NAMES[EFFECT_FLIP_INVERT] = 'Flip (invert) colors'
+
+const EFFECT_NAMES_CHOICES = []
+for (let id in EFFECT_NAMES) {
+	EFFECT_NAMES_CHOICES.push({
+		id: id,
+		label: EFFECT_NAMES[id],
+	})
+}
+
+class EffectsManager {
+	myModule
+	apiConnector = new RGBLinkVSP628ProConnector()
+
+	// hack, only for code hints
+	getApiConnector() {
+		this.apiConnector = this.myModule.apiConnector
+		return this.apiConnector
+	}
+
+	constructor(_module) {
+		this.myModule = _module
+	}
+
+	getActions() {
+		let actions = []
+		let self = this
+
+		actions[ACTION_SET_EFFECT] = {
+			name: 'Set effect on layer.',
+			description:
+				'Set selected effect on selected layer/channel. Available effects: brightness, contrast, chroma, hue, color temperature, gamma, sharpness, flip.',
+			options: [
+				{
+					id: 'effect',
+					type: 'dropdown',
+					label: 'Effect',
+					choices: EFFECT_NAMES_CHOICES,
+					default: EFFECT_BRIGHTNESS_RED,
+				},
+				{
+					id: 'layer',
+					type: 'dropdown',
+					label: 'Layer',
+					choices: LAYER_NAMES_CHOICES,
+					default: LAYER_A,
+				},
+				{
+					id: 'brightness',
+					type: 'number',
+					label: 'Brightness (from -512 to 512)',
+					min: -512,
+					max: 512,
+					default: '0',
+					isVisible: function (options = new CompanionOptionValues()) {
+						// what a mess, can't use defined const
+						return options.effect.includes('brightness')
+					},
+				},
+				{
+					id: 'contrast',
+					type: 'number',
+					label: 'Contrast (from 0 to 399)',
+					min: 0,
+					max: 399,
+					default: '140',
+					isVisible: function (options = new CompanionOptionValues()) {
+						return options.effect.includes('contrast')
+					},
+				},
+				{
+					id: 'chroma',
+					type: 'number',
+					label: 'Chroma (from 0 to 399)',
+					min: 0,
+					max: 399,
+					default: '110',
+					isVisible: function (options = new CompanionOptionValues()) {
+						return options.effect.includes('chroma')
+					},
+				},
+				{
+					id: 'hue',
+					type: 'number',
+					label: 'Hue (from -180 to 180)',
+					min: -180,
+					max: 180,
+					default: '0',
+					isVisible: function (options = new CompanionOptionValues()) {
+						return options.effect.includes('hue')
+					},
+				},
+			],
+			callback: async (event) => {
+				self.doAction(event)
+			},
+		}
+
+		return actions
+	}
+
+	doAction(event) {
+		var layer = event.options.layer
+		switch (event.options.effect) {
+			case EFFECT_BRIGHTNESS_RED:
+				return this.getApiConnector().sendSetBrightnessRed(layer, event.options.brightness)
+			case EFFECT_BRIGHTNESS_GREEN:
+				return this.getApiConnector().sendSetBrightnessGreen(layer, event.options.brightness)
+			case EFFECT_BRIGHTNESS_BLUE:
+				return this.getApiConnector().sendSetBrightnessBlue(layer, event.options.brightness)
+			case EFFECT_CONTRAST_RED:
+				return this.getApiConnector().sendSetContrastRed(layer, event.options.contrast)
+			case EFFECT_CONTRAST_GREEN:
+				return this.getApiConnector().sendSetContrastGreen(layer, event.options.contrast)
+			case EFFECT_CONTRAST_BLUE:
+				return this.getApiConnector().sendSetContrastBlue(layer, event.options.contrast)
+			case EFFECT_CHROMA:
+				return this.getApiConnector().sendSetChroma(layer, event.options.chroma)
+			case EFFECT_HUE:
+				return this.getApiConnector().sendSetHue(layer, event.options.hue)
+		}
+		this.myModule.log(
+			'warn',
+			'Effect ' + event.options.effect + ' still not supported. This must be fixed by developer.'
+		)
+	}
+
+	getFeedbacksNames() {
+		return [FEEDBACK_SELECTED_EFFECT]
+	}
+
+	getFeedbacks() {
+		let feedbacks = []
+
+		feedbacks[FEEDBACK_SELECTED_EFFECT] = {
+			type: 'boolean',
+			name: 'Effect value on selected layer',
+			defaultStyle: colorsStyle.GREEN_BACKGROUND_WITH_WHITE_TEXT,
+			// options is how the user can choose the condition the feedback activates for
+			options: [
+				{
+					id: 'effect',
+					type: 'dropdown',
+					label: 'Effect',
+					choices: EFFECT_NAMES_CHOICES,
+					default: EFFECT_BRIGHTNESS_RED,
+				},
+				{
+					id: 'layer',
+					type: 'dropdown',
+					label: 'Layer',
+					choices: LAYER_NAMES_CHOICES,
+					default: LAYER_A,
+				},
+				{
+					id: 'brightness',
+					type: 'number',
+					label: 'Brightness (from -512 to 512)',
+					min: -512,
+					max: 512,
+					default: '0',
+					isVisible: function (options = new CompanionOptionValues()) {
+						// what a mess, can't use defined const
+						return options.effect.includes('brightness')
+					},
+				},
+				{
+					id: 'contrast',
+					type: 'number',
+					label: 'Contrast (from 0 to 399)',
+					min: 0,
+					max: 399,
+					default: '140',
+					isVisible: function (options = new CompanionOptionValues()) {
+						return options.effect.includes('contrast')
+					},
+				},
+				{
+					id: 'chroma',
+					type: 'number',
+					label: 'Chroma (from 0 to 399)',
+					min: 0,
+					max: 399,
+					default: '110',
+					isVisible: function (options = new CompanionOptionValues()) {
+						return options.effect.includes('chroma')
+					},
+				},
+				{
+					id: 'hue',
+					type: 'number',
+					label: 'Hue (from -180 to 180)',
+					min: -180,
+					max: 180,
+					default: '0',
+					isVisible: function (options = new CompanionOptionValues()) {
+						return options.effect.includes('hue')
+					},
+				},
+			],
+			callback: (feedback) => {
+				return this.checkFeedback(feedback)
+			},
+		}
+		return feedbacks
+	}
+
+	checkFeedback(feedback) {
+		var layer = feedback.options.layer
+		var layerStatus = new LayerParameters()
+		if (layer == LAYER_A) {
+			layerStatus = this.getApiConnector().deviceStatus.sources.layerA
+		} else if (layer == LAYER_B) {
+			layerStatus = this.getApiConnector().deviceStatus.sources.layerB
+		} else {
+			this.myModule.log('error', 'Wrong layer code:' + layer)
+			return false
+		}
+		switch (feedback.options.effect) {
+			case EFFECT_BRIGHTNESS_RED:
+				return layerStatus.brightness.red == feedback.options.brightness
+			case EFFECT_BRIGHTNESS_GREEN:
+				return layerStatus.brightness.green == feedback.options.brightness
+			case EFFECT_BRIGHTNESS_BLUE:
+				return layerStatus.brightness.blue == feedback.options.brightness
+			case EFFECT_CONTRAST_RED:
+				return layerStatus.contrast.red == feedback.options.contrast
+			case EFFECT_CONTRAST_GREEN:
+				return layerStatus.contrast.green == feedback.options.contrast
+			case EFFECT_CONTRAST_BLUE:
+				return layerStatus.contrast.blue == feedback.options.contrast
+			case EFFECT_CHROMA:
+				return layerStatus.chroma == feedback.options.chroma
+			case EFFECT_HUE:
+				return layerStatus.hue == feedback.options.hue
+		}
+		this.myModule.log(
+			'warn',
+			'Effect feedback ' + feedback.options.effect + ' still not supported. This must be fixed by developer.'
+		)
+	}
+
+	getPresets() {
+		let presets = []
+
+		{
+			let brightnessColorActionMap = {
+				Red: EFFECT_BRIGHTNESS_RED,
+				Green: EFFECT_BRIGHTNESS_GREEN,
+				Blue: EFFECT_BRIGHTNESS_BLUE,
+			}
+			let brightnessValues = [-300, 0, 300]
+			for (let colorName in brightnessColorActionMap) {
+				for (let brightnessIdx in brightnessValues) {
+					let brightness = brightnessValues[brightnessIdx]
+					presets.push({
+						type: 'button',
+						category: PRESETS_CATEGORY_NAME,
+						name: colorName + ' brightness ' + brightness, // A name for the preset. Shown to the user when they hover over it
+						style: {
+							text: colorName + ' brightness ' + brightness,
+							size: 'auto',
+							color: colorsSingle.WHITE,
+							bgcolor: colorsSingle.BLACK,
+						},
+						steps: [
+							{
+								down: [
+									{
+										actionId: ACTION_SET_EFFECT,
+										options: { layer: LAYER_A, effect: brightnessColorActionMap[colorName], brightness: brightness },
+									},
+								],
+								up: [],
+							},
+						],
+						feedbacks: [
+							{
+								feedbackId: FEEDBACK_SELECTED_EFFECT,
+								options: { layer: LAYER_A, effect: brightnessColorActionMap[colorName], brightness: brightness },
+								style: colorsStyle.GREEN_BACKGROUND_WITH_WHITE_TEXT,
+							},
+						],
+					})
+				}
+			}
+		}
+
+		{
+			let contrastColorActionMap = {
+				Red: EFFECT_CONTRAST_RED,
+				Green: EFFECT_CONTRAST_GREEN,
+				Blue: EFFECT_CONTRAST_BLUE,
+			}
+			let contrastValues = [20, 140, 300]
+			for (let colorName in contrastColorActionMap) {
+				for (let contrastIdx in contrastValues) {
+					let contrast = contrastValues[contrastIdx]
+					presets.push({
+						type: 'button',
+						category: PRESETS_CATEGORY_NAME,
+						name: colorName + ' contrast ' + contrast, // A name for the preset. Shown to the user when they hover over it
+						style: {
+							text: colorName + ' contrast ' + contrast,
+							size: 'auto',
+							color: colorsSingle.WHITE,
+							bgcolor: colorsSingle.BLACK,
+						},
+						steps: [
+							{
+								down: [
+									{
+										actionId: ACTION_SET_EFFECT,
+										options: { layer: LAYER_A, effect: contrastColorActionMap[colorName], contrast: contrast },
+									},
+								],
+								up: [],
+							},
+						],
+						feedbacks: [
+							{
+								feedbackId: FEEDBACK_SELECTED_EFFECT,
+								options: { layer: LAYER_A, effect: contrastColorActionMap[colorName], contrast: contrast },
+								style: colorsStyle.GREEN_BACKGROUND_WITH_WHITE_TEXT,
+							},
+						],
+					})
+				}
+			}
+		}
+
+		{
+			let chromaValues = [20, 110, 300]
+			for (let chromaIdx in chromaValues) {
+				let chroma = chromaValues[chromaIdx]
+				presets.push({
+					type: 'button',
+					category: PRESETS_CATEGORY_NAME,
+					name: 'Chroma\\n' + chroma, // A name for the preset. Shown to the user when they hover over it
+					style: {
+						text: 'Chroma\\n' + chroma,
+						size: 'auto',
+						color: colorsSingle.WHITE,
+						bgcolor: colorsSingle.BLACK,
+					},
+					steps: [
+						{
+							down: [
+								{
+									actionId: ACTION_SET_EFFECT,
+									options: { layer: LAYER_A, effect: EFFECT_CHROMA, chroma: chroma },
+								},
+							],
+							up: [],
+						},
+					],
+					feedbacks: [
+						{
+							feedbackId: FEEDBACK_SELECTED_EFFECT,
+							options: { layer: LAYER_A, effect: EFFECT_CHROMA, chroma: chroma },
+							style: colorsStyle.GREEN_BACKGROUND_WITH_WHITE_TEXT,
+						},
+					],
+				})
+			}
+		}
+
+		{
+			let hueValues = [-150, 0, 150]
+			for (let hueIdx in hueValues) {
+				let hue = hueValues[hueIdx]
+				presets.push({
+					type: 'button',
+					category: PRESETS_CATEGORY_NAME,
+					name: 'Hue\\n' + hue, // A name for the preset. Shown to the user when they hover over it
+					style: {
+						text: 'Hue\\n' + hue,
+						size: 'auto',
+						color: colorsSingle.WHITE,
+						bgcolor: colorsSingle.BLACK,
+					},
+					steps: [
+						{
+							down: [
+								{
+									actionId: ACTION_SET_EFFECT,
+									options: { layer: LAYER_A, effect: EFFECT_HUE, hue: hue },
+								},
+							],
+							up: [],
+						},
+					],
+					feedbacks: [
+						{
+							feedbackId: FEEDBACK_SELECTED_EFFECT,
+							options: { layer: LAYER_A, effect: EFFECT_HUE, hue: hue },
+							style: colorsStyle.GREEN_BACKGROUND_WITH_WHITE_TEXT,
+						},
+					],
+				})
+			}
+		}
+
+		return presets
+	}
+}
+
+module.exports = EffectsManager

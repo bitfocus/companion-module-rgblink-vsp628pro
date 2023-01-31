@@ -10,6 +10,7 @@ const SourceSwitchManager = require('./managers/SourceSwitchManager')
 const OutputResolutionManager = require('./managers/OutputResolutionManager')
 const FreezeManager = require('./managers/FreezeManager')
 const MirrorAndRotateManager = require('./managers/MirrorAndRotateManager')
+const EffectsManager = require('./managers/EffectsManager')
 const { ApiConfig } = require('./rgblinkapiconnector')
 
 class VSP628ProModuleInstance extends InstanceBase {
@@ -34,6 +35,7 @@ class VSP628ProModuleInstance extends InstanceBase {
 			this.managers.push(new SystemModeManager(this))
 			this.managers.push(new FreezeManager(this))
 			this.managers.push(new MirrorAndRotateManager(this))
+			this.managers.push(new EffectsManager(this))
 			this.managers.push(new LayerManager(this))
 			this.managers.push(new FrontPanelManager(this))
 
