@@ -217,6 +217,47 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		this.sendCommand('75', '17', '00', '00', '00') // [OK] Read rotate
 		this.sendCommand('75', '17', '01', '00', '00') // [OK] Read rotate
 
+		// this.sendCommand('80', '1F', '00', '00', '00') // read red brightness
+		// this.sendCommand('80', '1F', '01', '00', '00')
+		// this.sendCommand('80', '21', '00', '00', '00') // read green brightness
+		// this.sendCommand('80', '21', '01', '00', '00')
+		// this.sendCommand('80', '23', '00', '00', '00') // read blue brightness
+		// this.sendCommand('80', '23', '01', '00', '00')
+
+		// this.sendCommand('80', '25', '00', '00', '00') // read red contrast
+		// this.sendCommand('80', '25', '01', '00', '00')
+		// this.sendCommand('80', '27', '00', '00', '00') // read green contrast
+		// this.sendCommand('80', '27', '01', '00', '00')
+		// this.sendCommand('80', '29', '00', '00', '00') // read blue contrast
+		// this.sendCommand('80', '29', '01', '00', '00')
+
+		// this.sendCommand('80', '05', '00', '00', '00') // read chroma
+		// this.sendCommand('80', '05', '01', '00', '00')
+		// this.sendCommand('80', '07', '00', '00', '00') // read hue
+		// this.sendCommand('80', '07', '01', '00', '00')
+		// this.sendCommand('80', '09', '00', '00', '00') // read color temperature
+		// this.sendCommand('80', '09', '01', '00', '00')
+		// this.sendCommand('80', '1B', '00', '00', '00') // read gamma
+		// this.sendCommand('80', '1B', '01', '00', '00')
+		// this.sendCommand('80', '0B', '00', '00', '00') // read horizontal sharpness
+		// this.sendCommand('80', '0B', '01', '00', '00')
+		// this.sendCommand('80', '0D', '00', '00', '00') // read vertical sharpness
+		// this.sendCommand('80', '0D', '01', '00', '00')
+		// this.sendCommand('80', '0F', '00', '00', '00') // read horizontal noise reduction
+		// this.sendCommand('80', '0F', '01', '00', '00')
+		// this.sendCommand('80', '11', '00', '00', '00') // read vertical noise reduction
+		// this.sendCommand('80', '11', '01', '00', '00')
+		// this.sendCommand('80', '13', '00', '00', '00') // read temporal nr
+		// this.sendCommand('80', '13', '01', '00', '00')
+		// this.sendCommand('80', '15', '00', '00', '00') // read block nr
+		// this.sendCommand('80', '15', '01', '00', '00')
+		// this.sendCommand('80', '17', '00', '00', '00') // read mosquito nr
+		// this.sendCommand('80', '17', '01', '00', '00')
+		// this.sendCommand('80', '19', '00', '00', '00') // read combing nr
+		// this.sendCommand('80', '19', '01', '00', '00')
+		// this.sendCommand('80', '2B', '00', '00', '00') // read invert
+		// this.sendCommand('80', '2B', '01', '00', '00')
+
 		//this.sendCommand('75', '11', '00', '00', '00') // feedback 75 11 00 80 07 // bad example for freeze live....
 		//this.sendCommand('75', '11', '01', '00', '00') // feedback 75 11 01 80 02
 	}
