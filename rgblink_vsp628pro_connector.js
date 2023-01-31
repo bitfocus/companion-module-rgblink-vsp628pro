@@ -560,10 +560,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		this.myWarn('Unrecognized feedback message:' + redeableMsg)
 	}
 
-	logFeedback(redeableMsg, info) {
-		this.myDebug('Feedback:' + redeableMsg + ' ' + info)
-	}
-
 	emitConnectionStatusOK() {
 		this.emit(this.EVENT_NAME_ON_CONNECTION_OK, [])
 	}

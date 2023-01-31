@@ -67,6 +67,7 @@ class VSP628ProModuleInstance extends InstanceBase {
 		}
 
 		this.apiConnector.setPolling(this.config.polling)
+		this.apiConnector.setLogEveryCommand(this.config.logEveryCommand)
 	}
 
 	// Return config fields for web config
@@ -92,6 +93,15 @@ class VSP628ProModuleInstance extends InstanceBase {
 				id: 'polling',
 				width: 12,
 				default: true,
+			},
+			{
+				type: 'checkbox',
+				label: 'Debug logging of every sent/received command (may slow down your computer)',
+				tooltip: 'test toolitp',
+				description: 'test descri',
+				id: 'logEveryCommand',
+				width: 12,
+				default: false,
 			},
 		]
 	}
@@ -124,7 +134,9 @@ class VSP628ProModuleInstance extends InstanceBase {
 
 	initApiConnector() {
 		let self = this
-		this.apiConnector = new RGBLinkVSP628ProConnector(new ApiConfig(this.config.host, this.config.port, this.config.polling, this.config.logEveryCommand))
+		this.apiConnector = new RGBLinkVSP628ProConnector(
+			new ApiConfig(this.config.host, this.config.port, this.config.polling, this.config.logEveryCommand)
+		)
 		this.apiConnector.enableLog(this)
 		this.apiConnector.on(this.apiConnector.EVENT_NAME_ON_DEVICE_STATE_CHANGED, () => {
 			self.checkAllFeedbacks()

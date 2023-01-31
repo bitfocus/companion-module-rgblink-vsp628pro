@@ -174,7 +174,6 @@ class RGBLinkApiConnector {
 				this.myWarn('Please replace askAboutStatus function with getPollingCommands')
 				this.askAboutStatus()
 			}
-
 		}
 	}
 
@@ -257,7 +256,9 @@ class RGBLinkApiConnector {
 			})
 
 			this.socket.on('data', (message) => {
-				//this.myDebug('FEEDBACK: ' + message)
+				if (this.config && this.config.logEveryCommand) {
+					this.myDebug('FEEDBACK: ' + message)
+				}
 				this.onDataReceived(message)
 			})
 		}
@@ -272,6 +273,12 @@ class RGBLinkApiConnector {
 			}
 		} catch (ex) {
 			console.log(ex)
+		}
+	}
+
+	logFeedback(redeableMsg, info) {
+		if (this.config && this.config.logEveryCommand) {
+			this.myDebug('Feedback:' + redeableMsg + ' ' + info)
 		}
 	}
 
@@ -311,7 +318,9 @@ class RGBLinkApiConnector {
 					this.socket.send(cmd).then(function () {
 						// self.myLog('sent?')
 					})
-					this.myDebug('SENT    : ' + cmd)
+					if (this.config && this.config.logEveryCommand) {
+						this.myDebug('SENT    : ' + cmd)
+					}
 					this.sentCommandStorage.registerSentCommand(cmd)
 				} else {
 					this.myDebug("Can't send command, socket undefined!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
@@ -324,6 +333,10 @@ class RGBLinkApiConnector {
 
 	setPolling(polling) {
 		this.config.polling = polling
+	}
+
+	setLogEveryCommand(logEveryCommand) {
+		this.config.logEveryCommand = logEveryCommand
 	}
 
 	getPollingCommands() {
