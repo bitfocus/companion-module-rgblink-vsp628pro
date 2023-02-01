@@ -206,6 +206,17 @@ class EffectsManager {
 						return options.effect.includes('sharpness')
 					},
 				},
+				{
+					id: 'noiseNr',
+					type: 'number',
+					label: 'Number (from 0 to 3)',
+					min: 0,
+					max: 3,
+					default: '0',
+					isVisible: function (options = new CompanionOptionValues()) {
+						return options.effect.includes('noise')
+					},
+				},
 			],
 			callback: async (event) => {
 				try {
@@ -246,6 +257,18 @@ class EffectsManager {
 				return this.getApiConnector().sendSetSharpnessHorizontal(layer, event.options.sharpness)
 			case EFFECT_SHARPNESS_VERTICAL:
 				return this.getApiConnector().sendSetSharpnessVertical(layer, event.options.sharpness)
+			case EFFECT_NOISE_REDUCTION_HORIZONTAL:
+				return this.getApiConnector().sendSetNoiseReductionHorizontal(layer, event.options.noiseNr)
+			case EFFECT_NOISE_REDUCTION_VERTICAL:
+				return this.getApiConnector().sendSetNoiseReductionVertical(layer, event.options.noiseNr)
+			case EFFECT_NOISE_REDUCTION_TEMPORAL_NR:
+				return this.getApiConnector().sendSetNoiseReductionTemporal(layer, event.options.noiseNr)
+			case EFFECT_NOISE_REDUCTION_BLOCK_NR:
+				return this.getApiConnector().sendSetNoiseReductionBlock(layer, event.options.noiseNr)
+			case EFFECT_NOISE_REDUCTION_MOSQUITO_NR:
+				return this.getApiConnector().sendSetNoiseReductionMosquito(layer, event.options.noiseNr)
+			case EFFECT_NOISE_REDUCTION_COMBING_NR:
+				return this.getApiConnector().sendSetNoiseReductionCombing(layer, event.options.noiseNr)
 		}
 		this.myModule.log(
 			'warn',
@@ -356,6 +379,17 @@ class EffectsManager {
 						return options.effect.includes('sharpness')
 					},
 				},
+				{
+					id: 'noiseNr',
+					type: 'number',
+					label: 'Number (from 0 to 3)',
+					min: 0,
+					max: 3,
+					default: '0',
+					isVisible: function (options = new CompanionOptionValues()) {
+						return options.effect.includes('noise')
+					},
+				},
 			],
 			callback: (feedback) => {
 				return this.checkFeedback(feedback)
@@ -400,6 +434,18 @@ class EffectsManager {
 				return layerStatus.sharpness.horizontal == feedback.options.sharpness
 			case EFFECT_SHARPNESS_VERTICAL:
 				return layerStatus.sharpness.vertical == feedback.options.sharpness
+			case EFFECT_NOISE_REDUCTION_HORIZONTAL:
+				return layerStatus.noiseReduction.horizontal == feedback.options.noiseNr
+			case EFFECT_NOISE_REDUCTION_VERTICAL:
+				return layerStatus.noiseReduction.vertical == feedback.options.noiseNr
+			case EFFECT_NOISE_REDUCTION_TEMPORAL_NR:
+				return layerStatus.noiseReduction.temporalNR == feedback.options.noiseNr
+			case EFFECT_NOISE_REDUCTION_BLOCK_NR:
+				return layerStatus.noiseReduction.blockNR == feedback.options.noiseNr
+			case EFFECT_NOISE_REDUCTION_MOSQUITO_NR:
+				return layerStatus.noiseReduction.mosquitoNR == feedback.options.noiseNr
+			case EFFECT_NOISE_REDUCTION_COMBING_NR:
+				return layerStatus.noiseReduction.combingNR == feedback.options.noiseNr
 		}
 		this.myModule.log(
 			'warn',
@@ -672,6 +718,52 @@ class EffectsManager {
 							{
 								feedbackId: FEEDBACK_SELECTED_EFFECT,
 								options: { layer: LAYER_A, effect: axisActionMap[axisName], sharpness: sharpness },
+								style: colorsStyle.GREEN_BACKGROUND_WITH_WHITE_TEXT,
+							},
+						],
+					})
+				}
+			}
+		}
+
+		{
+			let nosieTypeActionMap = {
+				'Noise H nr': EFFECT_NOISE_REDUCTION_HORIZONTAL,
+				'Noise V nr': EFFECT_NOISE_REDUCTION_VERTICAL,
+				'Noise Temporal nr': EFFECT_NOISE_REDUCTION_TEMPORAL_NR,
+				'Noise Block nr': EFFECT_NOISE_REDUCTION_BLOCK_NR,
+				'Noise Mosquito nr': EFFECT_NOISE_REDUCTION_MOSQUITO_NR,
+				'Noise Combing nr': EFFECT_NOISE_REDUCTION_COMBING_NR,
+			}
+			let nr = [0, 1, 3]
+			for (let typeName in nosieTypeActionMap) {
+				for (let nrIdx in nr) {
+					let nrValue = nr[nrIdx]
+					presets.push({
+						type: 'button',
+						category: PRESETS_CATEGORY_NAME,
+						name: typeName + '\\n' + nrValue, // A name for the preset. Shown to the user when they hover over it
+						style: {
+							text: typeName + '\\n' + nrValue,
+							size: 'auto',
+							color: colorsSingle.WHITE,
+							bgcolor: colorsSingle.BLACK,
+						},
+						steps: [
+							{
+								down: [
+									{
+										actionId: ACTION_SET_EFFECT,
+										options: { layer: LAYER_A, effect: nosieTypeActionMap[typeName], noiseNr: nrValue },
+									},
+								],
+								up: [],
+							},
+						],
+						feedbacks: [
+							{
+								feedbackId: FEEDBACK_SELECTED_EFFECT,
+								options: { layer: LAYER_A, effect: nosieTypeActionMap[typeName], noiseNr: nrValue },
 								style: colorsStyle.GREEN_BACKGROUND_WITH_WHITE_TEXT,
 							},
 						],

@@ -678,6 +678,82 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		}
 	}
 
+	isNoiseReductionNrValid(nr) {
+		return nr >= 0 && nr <= 3
+	}
+
+	sendSetNoiseReductionHorizontal(layer, nr) {
+		if (this.isLayerValid(layer)) {
+			if (this.isNoiseReductionNrValid(nr)) {
+				this.sendCommand('80', '0E', layer, this.byteToTwoSignHex(nr), '00')
+			} else {
+				this.myWarn('Wrong nr : ' + nr)
+			}
+		} else {
+			this.myWarn('Wrong layer code: ' + layer)
+		}
+	}
+
+	sendSetNoiseReductionVertical(layer, nr) {
+		if (this.isLayerValid(layer)) {
+			if (this.isNoiseReductionNrValid(nr)) {
+				this.sendCommand('80', '10', layer, this.byteToTwoSignHex(nr), '00')
+			} else {
+				this.myWarn('Wrong nr : ' + nr)
+			}
+		} else {
+			this.myWarn('Wrong layer code: ' + layer)
+		}
+	}
+
+	sendSetNoiseReductionTemporal(layer, nr) {
+		if (this.isLayerValid(layer)) {
+			if (this.isNoiseReductionNrValid(nr)) {
+				this.sendCommand('80', '12', layer, this.byteToTwoSignHex(nr), '00')
+			} else {
+				this.myWarn('Wrong nr : ' + nr)
+			}
+		} else {
+			this.myWarn('Wrong layer code: ' + layer)
+		}
+	}
+
+	sendSetNoiseReductionBlock(layer, nr) {
+		if (this.isLayerValid(layer)) {
+			if (this.isNoiseReductionNrValid(nr)) {
+				this.sendCommand('80', '14', layer, this.byteToTwoSignHex(nr), '00')
+			} else {
+				this.myWarn('Wrong nr : ' + nr)
+			}
+		} else {
+			this.myWarn('Wrong layer code: ' + layer)
+		}
+	}
+
+	sendSetNoiseReductionMosquito(layer, nr) {
+		if (this.isLayerValid(layer)) {
+			if (this.isNoiseReductionNrValid(nr)) {
+				this.sendCommand('80', '16', layer, this.byteToTwoSignHex(nr), '00')
+			} else {
+				this.myWarn('Wrong nr : ' + nr)
+			}
+		} else {
+			this.myWarn('Wrong layer code: ' + layer)
+		}
+	}
+
+	sendSetNoiseReductionCombing(layer, nr) {
+		if (this.isLayerValid(layer)) {
+			if (this.isNoiseReductionNrValid(nr)) {
+				this.sendCommand('80', '18', layer, this.byteToTwoSignHex(nr), '00')
+			} else {
+				this.myWarn('Wrong nr : ' + nr)
+			}
+		} else {
+			this.myWarn('Wrong layer code: ' + layer)
+		}
+	}
+
 	// this is really spaghetti code, and need refactor in future
 	consumeFeedback(ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4) {
 		let redeableMsg = [ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4].join(' ')
@@ -945,34 +1021,52 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 								break
 							case '0E':
 							case '0F':
-								this.emitConnectionStatusOK()
-								layer.noiseReduction.horizontal = value
-								return this.logFeedback(redeableMsg, onLayerMsgPart + ' noise reduction horizontal is: ' + value)
+								if (this.isNoiseReductionNrValid(DAT3)) {
+									this.emitConnectionStatusOK()
+									layer.noiseReduction.horizontal = value
+									return this.logFeedback(redeableMsg, onLayerMsgPart + ' noise reduction horizontal is: ' + value)
+								}
+								break
 							case '10':
 							case '11':
-								this.emitConnectionStatusOK()
-								layer.noiseReduction.vertical = value
-								return this.logFeedback(redeableMsg, onLayerMsgPart + ' noise reduction vertical is: ' + value)
+								if (this.isNoiseReductionNrValid(DAT3)) {
+									this.emitConnectionStatusOK()
+									layer.noiseReduction.vertical = value
+									return this.logFeedback(redeableMsg, onLayerMsgPart + ' noise reduction vertical is: ' + value)
+								}
+								break
 							case '12':
 							case '13':
-								this.emitConnectionStatusOK()
-								layer.noiseReduction.temporalNR = value
-								return this.logFeedback(redeableMsg, onLayerMsgPart + ' noise reduction temporal NR is: ' + value)
+								if (this.isNoiseReductionNrValid(DAT3)) {
+									this.emitConnectionStatusOK()
+									layer.noiseReduction.temporalNR = value
+									return this.logFeedback(redeableMsg, onLayerMsgPart + ' noise reduction temporal NR is: ' + value)
+								}
+								break
 							case '14':
 							case '15':
-								this.emitConnectionStatusOK()
-								layer.noiseReduction.blockNR = value
-								return this.logFeedback(redeableMsg, onLayerMsgPart + ' noise reduction block NR is: ' + value)
+								if (this.isNoiseReductionNrValid(DAT3)) {
+									this.emitConnectionStatusOK()
+									layer.noiseReduction.blockNR = value
+									return this.logFeedback(redeableMsg, onLayerMsgPart + ' noise reduction block NR is: ' + value)
+								}
+								break
 							case '16':
 							case '17':
-								this.emitConnectionStatusOK()
-								layer.noiseReduction.mosquitoNR = value
-								return this.logFeedback(redeableMsg, onLayerMsgPart + ' noise reduction mosquito NR is: ' + value)
+								if (this.isNoiseReductionNrValid(DAT3)) {
+									this.emitConnectionStatusOK()
+									layer.noiseReduction.mosquitoNR = value
+									return this.logFeedback(redeableMsg, onLayerMsgPart + ' noise reduction mosquito NR is: ' + value)
+								}
+								break
 							case '18':
 							case '19':
-								this.emitConnectionStatusOK()
-								layer.noiseReduction.combingNR = value
-								return this.logFeedback(redeableMsg, onLayerMsgPart + ' noise reduction combing NR is: ' + value)
+								if (this.isNoiseReductionNrValid(DAT3)) {
+									this.emitConnectionStatusOK()
+									layer.noiseReduction.combingNR = value
+									return this.logFeedback(redeableMsg, onLayerMsgPart + ' noise reduction combing NR is: ' + value)
+								}
+								break
 							case '2A':
 							case '2B':
 								this.emitConnectionStatusOK()
