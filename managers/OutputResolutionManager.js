@@ -10,6 +10,7 @@ const {
 	OUTPUT_NAMES,
 	OUTPUT1,
 	OUTPUT2,
+	DeviceStateChanged,
 } = require('../rgblink_vsp628pro_connector')
 
 const RESOLUTION_NAMES_CHOICES = []
@@ -155,6 +156,16 @@ class OutputResolutionManager {
 		}
 
 		return presets
+	}
+
+	getVariablesDefinitions() {
+		let variables = []
+
+		return variables
+	}
+
+	getVariableValueForUpdate(changedEvent = new DeviceStateChanged()) {
+		return {}
 	}
 }
 

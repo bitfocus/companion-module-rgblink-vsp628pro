@@ -13,7 +13,7 @@ for (let i = 1; i <= 21; i++) {
 }
 
 const { colorsStyle, colorsSingle } = require('./colors')
-const { RGBLinkVSP628ProConnector } = require('../rgblink_vsp628pro_connector')
+const { RGBLinkVSP628ProConnector, DeviceStateChanged } = require('../rgblink_vsp628pro_connector')
 
 class UserFlashManager {
 	//@
@@ -178,6 +178,16 @@ class UserFlashManager {
 		}
 
 		return presets
+	}
+
+	getVariablesDefinitions() {
+		let variables = []
+
+		return variables
+	}
+
+	getVariableValueForUpdate(changedEvent = new DeviceStateChanged()) {
+		return {}
 	}
 }
 

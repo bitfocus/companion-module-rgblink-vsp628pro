@@ -3,7 +3,12 @@ const ACTION_SET_FREEZE_STATUS = 'set_freeze_status'
 const FEEDBACK_FREEZE_STATUS = 'feedback_freeze_status'
 
 const { colorsStyle, colorsSingle } = require('./colors')
-const { RGBLinkVSP628ProConnector, FREEZE_NAMES, FREEZE_STATUS_FREEZE } = require('../rgblink_vsp628pro_connector')
+const {
+	RGBLinkVSP628ProConnector,
+	FREEZE_NAMES,
+	FREEZE_STATUS_FREEZE,
+	DeviceStateChanged,
+} = require('../rgblink_vsp628pro_connector')
 
 const FREEZE_NAMES_CHOICES = []
 for (let id in FREEZE_NAMES) {
@@ -113,6 +118,16 @@ class FreezeManager {
 		}
 
 		return presets
+	}
+
+	getVariablesDefinitions() {
+		let variables = []
+
+		return variables
+	}
+
+	getVariableValueForUpdate(changedEvent = new DeviceStateChanged()) {
+		return {}
 	}
 }
 

@@ -1,6 +1,6 @@
 const { InstanceBase, Regex, runEntrypoint, InstanceStatus } = require('@companion-module/base')
 const UpgradeScripts = require('./upgrades')
-const { RGBLinkVSP628ProConnector, FRONT_PANEL_LOCKED, FRONT_PANEL_UNLOCKED } = require('./rgblink_vsp628pro_connector')
+const { RGBLinkVSP628ProConnector } = require('./rgblink_vsp628pro_connector')
 
 const FrontPanelManager = require('./managers/FrontPanelManager')
 const UserFlashManager = require('./managers/UserFlashManager')
@@ -136,12 +136,11 @@ class VSP628ProModuleInstance extends InstanceBase {
 	}
 
 	updateVariables() {
-		let variables = [];
+		let variables = []
 
-		// variables.push({
-		// 	variableId: 'frontPanelLocked',
-		// 	name: 'Is front panel locked'
-		// })
+		for (let i = 0; i < this.managers.length; i++) {
+			variables = variables.concat(this.managers[i].getVariablesDefinitions())
+		}
 
 		this.setVariableDefinitions(variables)
 	}
@@ -152,11 +151,9 @@ class VSP628ProModuleInstance extends InstanceBase {
 			new ApiConfig(this.config.host, this.config.port, this.config.polling, this.config.logEveryCommand)
 		)
 		this.apiConnector.enableLog(this)
-		this.apiConnector.on(this.apiConnector.EVENT_NAME_ON_DEVICE_STATE_CHANGED, () => {
-			self.checkAllFeedbacks()
-			// this.setVariableValues({
-			// 	frontPanelLocked: FRONT_PANEL_LOCKED == self.apiConnector.deviceStatus.frontPanelLocked ? 'Locked' : 'Unlocked'
-			// })
+		this.apiConnector.on(this.apiConnector.EVENT_NAME_ON_DEVICE_STATE_CHANGED, (changedEvents) => {
+			self.checkAllFeedbacks(changedEvents)
+			self.updateVariablesValues(changedEvents)
 		})
 		this.apiConnector.on(this.apiConnector.EVENT_NAME_ON_CONNECTION_OK, (message) => {
 			self.updateStatus(InstanceStatus.Ok, message)
@@ -170,18 +167,46 @@ class VSP628ProModuleInstance extends InstanceBase {
 		this.updateStatus(InstanceStatus.Connecting)
 	}
 
-	checkAllFeedbacks() {
+	checkAllFeedbacks(changedEvents = []) {
+		if (!Array.isArray(changedEvents)) {
+			changedEvents = [changedEvents]
+		} else if (Array.isArray(changedEvents) && changedEvents.length == 0) {
+			changedEvents = [undefined]
+		}
+
 		let feedbacknames = []
-		for (let i = 0; i < this.managers.length; i++) {
-			feedbacknames = feedbacknames.concat(this.managers[i].getFeedbacksNames())
+		for (let evIdx = 0; evIdx < changedEvents.length; evIdx++) {
+			let event = changedEvents[evIdx]
+			for (let i = 0; i < this.managers.length; i++) {
+				feedbacknames = feedbacknames.concat(this.managers[i].getFeedbacksNames(event))
+			}
 		}
 
 		for (let i = 0; i < feedbacknames.length; i++) {
 			this.checkFeedbacks(feedbacknames[i])
 		}
 	}
-}
 
+	updateVariablesValues(changedEvents = []) {
+		if (!Array.isArray(changedEvents)) {
+			changedEvents = [changedEvents]
+		} else if (Array.isArray(changedEvents) && changedEvents.length == 0) {
+			changedEvents = [undefined]
+		}
+
+		let values = {}
+		for (let evIdx = 0; evIdx < changedEvents.length; evIdx++) {
+			let event = changedEvents[evIdx]
+			for (let i = 0; i < this.managers.length; i++) {
+				values = {
+					...values,
+					...this.managers[i].getVariableValueForUpdate(event),
+				}
+			}
+		}
+		this.setVariableValues(values)
+	}
+}
 runEntrypoint(VSP628ProModuleInstance, UpgradeScripts)
 
 /**

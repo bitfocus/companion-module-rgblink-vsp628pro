@@ -19,6 +19,7 @@ const {
 	GAMMA_1_DOT_6,
 	FLIP_NAMES,
 	FLIP_ON,
+	DeviceStateChanged,
 } = require('../rgblink_vsp628pro_connector')
 
 const LAYER_NAMES_CHOICES = []
@@ -841,6 +842,16 @@ class EffectsManager {
 		}
 
 		return presets
+	}
+
+	getVariablesDefinitions() {
+		let variables = []
+
+		return variables
+	}
+
+	getVariableValueForUpdate(changedEvent = new DeviceStateChanged()) {
+		return {}
 	}
 }
 

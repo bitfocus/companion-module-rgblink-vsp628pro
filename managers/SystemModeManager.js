@@ -3,7 +3,12 @@ const ACTION_SET_SYSTEM_MODE = 'set_system_mode'
 const FEEDBACK_SYSTEM_MODE = 'feedback_system_mode'
 
 const { colorsStyle, colorsSingle } = require('./colors')
-const { RGBLinkVSP628ProConnector, SYSTEM_MODE_NAMES, SYSTEM_MODE_STANDARD } = require('../rgblink_vsp628pro_connector')
+const {
+	RGBLinkVSP628ProConnector,
+	SYSTEM_MODE_NAMES,
+	SYSTEM_MODE_STANDARD,
+	DeviceStateChanged,
+} = require('../rgblink_vsp628pro_connector')
 
 const SYSTEM_MODE_NAMES_CHOICES = []
 for (let id in SYSTEM_MODE_NAMES) {
@@ -112,6 +117,16 @@ class SystemModeManager {
 		}
 
 		return presets
+	}
+
+	getVariablesDefinitions() {
+		let variables = []
+
+		return variables
+	}
+
+	getVariableValueForUpdate(changedEvent = new DeviceStateChanged()) {
+		return {}
 	}
 }
 

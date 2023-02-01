@@ -14,6 +14,7 @@ const {
 	LAYER_B,
 	ROTATE_90_NAMES,
 	ROTATE_90_LEFT,
+	DeviceStateChanged,
 } = require('../rgblink_vsp628pro_connector')
 
 const LAYER_NAMES_CHOICES = []
@@ -289,6 +290,16 @@ class MirrorAndRotateManager {
 		}
 
 		return presets
+	}
+
+	getVariablesDefinitions() {
+		let variables = []
+
+		return variables
+	}
+
+	getVariableValueForUpdate(changedEvent = new DeviceStateChanged()) {
+		return {}
 	}
 }
 

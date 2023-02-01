@@ -230,6 +230,35 @@ class DeviceStatus {
 		resolution2: undefined,
 	}
 	freezeStatus
+
+	isFrontPanelLockStatusValid(status) {
+		return status == FRONT_PANEL_LOCKED || status == FRONT_PANEL_UNLOCKED
+	}
+
+	setFrontPanelLockStatus(newStatus) {
+		if (this.frontPanelLocked != newStatus) {
+			this.frontPanelLocked = newStatus
+			return new DeviceStateChanged(DeviceChangeEventType.FRONT_PANEL_LOCK_CHANGED, newStatus)
+		}
+	}
+
+	getFrontPanelLockStatus() {
+		return this.frontPanelLocked
+	}
+}
+
+class DeviceStateChanged {
+	event = DeviceChangeEventType
+	newValue
+
+	constructor(deviceChangeEventType, newValue) {
+		this.event = deviceChangeEventType
+		this.newValue = newValue
+	}
+}
+
+const DeviceChangeEventType = {
+	FRONT_PANEL_LOCK_CHANGED: 'FRONT_PANEL_LOCK_CHANGED',
 }
 
 class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
@@ -246,8 +275,8 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		})
 
 		this.on(this.EVENT_NAME_ON_DATA_API, (ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4) => {
-			self.consumeFeedback(ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4)
-			this.emit(this.EVENT_NAME_ON_DEVICE_STATE_CHANGED, [])
+			let changedEvents = self.consumeFeedback(ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4)
+			this.emit(this.EVENT_NAME_ON_DEVICE_STATE_CHANGED, changedEvents)
 		})
 	}
 
@@ -325,13 +354,15 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 	sendSetFrontPanelLockStatus(status) {
 		if (this.isLockStatusValid(status)) {
 			this.sendCommand('68', '02' /*Set the panel lock or unlock*/, this.byteToTwoSignHex(status), '00', '00')
-		} else {
-			this.myWarn('Wrong lock status: ' + status)
 		}
 	}
 
 	isLockStatusValid(lock) {
-		return lock == FRONT_PANEL_LOCKED || lock == FRONT_PANEL_UNLOCKED
+		let valid = this.deviceStatus.isFrontPanelLockStatusValid(lock)
+		if (!valid) {
+			this.myWarn('Wrong lock status: ' + lock)
+		}
+		return valid
 	}
 
 	sendSaveToUserFlash(flashUserMode) {
@@ -787,8 +818,8 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 					// Set the front panel lock or unlock (0x02)
 					if (this.isLockStatusValid(DAT2)) {
 						this.emitConnectionStatusOK()
-						this.deviceStatus.frontPanelLocked = DAT2
-						return this.logFeedback(redeableMsg, 'Front panel lock status is ' + FRONT_PANEL_NAMES[DAT2])
+						this.logFeedback(redeableMsg, 'Front panel lock status is ' + FRONT_PANEL_NAMES[DAT2])
+						return this.deviceStatus.setFrontPanelLockStatus(DAT2)
 					}
 				} else if (DAT1 == '08') {
 					// Save To the user flash(0x08)
@@ -1186,3 +1217,6 @@ module.exports.GAMMA_1_DOT_6 = GAMMA_1_DOT_6
 
 module.exports.FLIP_NAMES = FLIP_NAMES
 module.exports.FLIP_ON = FLIP_ON
+
+module.exports.DeviceStateChanged = DeviceStateChanged
+module.exports.DeviceChangeEventType = DeviceChangeEventType

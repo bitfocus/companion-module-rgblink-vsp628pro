@@ -10,6 +10,7 @@ const {
 	SOURCE_SIGNALS_NAMES,
 	SOURCE_SIGNAL_HDMI,
 	LAYER_B,
+	DeviceStateChanged,
 } = require('../rgblink_vsp628pro_connector')
 
 const LAYER_NAMES_CHOICES = []
@@ -153,6 +154,16 @@ class SourceSwitchManager {
 		}
 
 		return presets
+	}
+
+	getVariablesDefinitions() {
+		let variables = []
+
+		return variables
+	}
+
+	getVariableValueForUpdate(changedEvent = new DeviceStateChanged()) {
+		return {}
 	}
 }
 

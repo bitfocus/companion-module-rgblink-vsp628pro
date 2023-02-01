@@ -4,11 +4,28 @@ const ACTION_FRONT_PANEL_UNLOCK = 'unlock'
 const FEEDBACK_FRONT_PANEL_LOCKED = 'locked'
 const FEEDBACK_FRONT_PANEL_UNLOCKED = 'unlocked'
 
-const { FRONT_PANEL_LOCKED, FRONT_PANEL_UNLOCKED } = require('./../rgblink_vsp628pro_connector')
+const {
+	FRONT_PANEL_LOCKED,
+	FRONT_PANEL_UNLOCKED,
+	RGBLinkVSP628ProConnector,
+	DeviceStateChanged,
+	DeviceChangeEventType,
+} = require('./../rgblink_vsp628pro_connector')
 const { colorsStyle, colorsSingle } = require('./colors')
+
+const Variables = {
+	VARIABLE_FRONT_PANEL_LOCK_STATUS: 'frontPanelLockStatus',
+}
 
 class FrontPanelManager {
 	myModule
+	apiConnector = new RGBLinkVSP628ProConnector()
+
+	// hack, only for code hints
+	getApiConnector() {
+		this.apiConnector = this.myModule.apiConnector
+		return this.apiConnector
+	}
 
 	constructor(_module) {
 		this.myModule = _module
@@ -21,7 +38,7 @@ class FrontPanelManager {
 			name: 'Lock front panel',
 			options: [],
 			callback: async (/*event*/) => {
-				this.myModule.apiConnector.sendSetFrontPanelLockStatus(FRONT_PANEL_LOCKED)
+				this.getApiConnector().sendSetFrontPanelLockStatus(FRONT_PANEL_LOCKED)
 			},
 		}
 
@@ -29,14 +46,18 @@ class FrontPanelManager {
 			name: 'Unlock front panel',
 			options: [],
 			callback: async (/*event*/) => {
-				this.myModule.apiConnector.sendSetFrontPanelLockStatus(FRONT_PANEL_UNLOCKED)
+				this.getApiConnector().sendSetFrontPanelLockStatus(FRONT_PANEL_UNLOCKED)
 			},
 		}
 		return actions
 	}
 
-	getFeedbacksNames() {
-		return [FEEDBACK_FRONT_PANEL_LOCKED, FEEDBACK_FRONT_PANEL_UNLOCKED]
+	getFeedbacksNames(changedEvent = new DeviceStateChanged()) {
+		switch (changedEvent.event) {
+			case DeviceChangeEventType.FRONT_PANEL_LOCK_CHANGED:
+				return [FEEDBACK_FRONT_PANEL_LOCKED, FEEDBACK_FRONT_PANEL_UNLOCKED]
+		}
+		return []
 	}
 
 	getFeedbacks() {
@@ -49,7 +70,7 @@ class FrontPanelManager {
 			// options is how the user can choose the condition the feedback activates for
 			options: [],
 			callback: (/*feedback*/) => {
-				return this.myModule.apiConnector.deviceStatus.frontPanelLocked == FRONT_PANEL_LOCKED
+				return this.getApiConnector().deviceStatus.getFrontPanelLockStatus() == FRONT_PANEL_LOCKED
 			},
 		}
 		feedbacks[FEEDBACK_FRONT_PANEL_UNLOCKED] = {
@@ -59,7 +80,7 @@ class FrontPanelManager {
 			// options is how the user can choose the condition the feedback activates for
 			options: [],
 			callback: (/*feedback*/) => {
-				return this.myModule.apiConnector.deviceStatus.frontPanelLocked == FRONT_PANEL_UNLOCKED
+				return this.getApiConnector().deviceStatus.getFrontPanelLockStatus() == FRONT_PANEL_UNLOCKED
 			},
 		}
 		return feedbacks
@@ -127,6 +148,28 @@ class FrontPanelManager {
 			],
 		})
 		return presets
+	}
+
+	getVariablesDefinitions() {
+		let variables = []
+		variables.push({
+			variableId: Variables.VARIABLE_FRONT_PANEL_LOCK_STATUS,
+			name: 'Front panel lock status',
+		})
+		return variables
+	}
+
+	getVariableValueForUpdate(changedEvent = new DeviceStateChanged()) {
+		let retObj = {}
+		switch (changedEvent.event) {
+			case DeviceChangeEventType.FRONT_PANEL_LOCK_CHANGED:
+				if (this.getApiConnector().deviceStatus.getFrontPanelLockStatus() == FRONT_PANEL_LOCKED) {
+					retObj[Variables.VARIABLE_FRONT_PANEL_LOCK_STATUS] = 'Locked'
+				} else if (this.getApiConnector().deviceStatus.getFrontPanelLockStatus() == FRONT_PANEL_UNLOCKED) {
+					retObj[Variables.VARIABLE_FRONT_PANEL_LOCK_STATUS] = 'Unlocked'
+				}
+		}
+		return retObj
 	}
 }
 
