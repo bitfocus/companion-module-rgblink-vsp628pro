@@ -1,9 +1,9 @@
+const { colorsStyle, colorsSingle } = require('./colors')
+const { RGBLinkVSP628ProConnector, LAYER_NAMES, LAYER_A, DeviceStateChanged, DeviceChangeEventType } = require('../api/rgblink_vsp628pro_connector')
+
 const ACTION_SET_LAYER = 'set_layer'
 
 const FEEDBACK_LAYER = 'feedback_selected_layer'
-
-const { colorsStyle, colorsSingle } = require('./colors')
-const { RGBLinkVSP628ProConnector, LAYER_NAMES, LAYER_A } = require('../api/rgblink_vsp628pro_connector')
 
 const LAYER_NAMES_CHOICES = []
 for (let id in LAYER_NAMES) {
@@ -11,6 +11,11 @@ for (let id in LAYER_NAMES) {
 		id: id,
 		label: LAYER_NAMES[id],
 	})
+}
+
+const Variables = {
+	LAYER_CODE: 'layerCode',
+	LAYER_NAME: 'layerName',
 }
 
 class LayerManager {
@@ -49,8 +54,12 @@ class LayerManager {
 		return actions
 	}
 
-	getFeedbacksNames() {
-		return [FEEDBACK_LAYER]
+	getFeedbacksNames(changedEvent = new DeviceStateChanged()) {
+		switch (changedEvent.event) {
+			case DeviceChangeEventType.LAYER_CHANGED:
+				return [FEEDBACK_LAYER]
+		}
+		return []
 	}
 
 	getFeedbacks() {
@@ -71,7 +80,7 @@ class LayerManager {
 				},
 			],
 			callback: (feedback) => {
-				return this.getApiConnector().deviceStatus.layer == feedback.options.layer
+				return this.getApiConnector().deviceStatus.getLayer() == feedback.options.layer
 			},
 		}
 		return feedbacks
@@ -117,12 +126,26 @@ class LayerManager {
 
 	getVariablesDefinitions() {
 		let variables = []
-
+		variables.push({
+			variableId: Variables.LAYER_CODE,
+			name: 'Layer code',
+		})
+		variables.push({
+			variableId: Variables.LAYER_NAME,
+			name: 'Layer name',
+		})
 		return variables
 	}
 
-	getVariableValueForUpdate(/*changedEvent = new DeviceStateChanged()*/) {
-		return {}
+	getVariableValueForUpdate(changedEvent = new DeviceStateChanged()) {
+		let retObj = {}
+		switch (changedEvent.event) {
+			case DeviceChangeEventType.LAYER_CHANGED:
+				retObj[Variables.LAYER_CODE] = changedEvent.newValue;
+				retObj[Variables.LAYER_NAME] = LAYER_NAMES[changedEvent.newValue];
+				break;
+		}
+		return retObj
 	}
 }
 

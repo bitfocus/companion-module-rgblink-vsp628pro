@@ -287,6 +287,21 @@ class DeviceStatus {
 			return new DeviceStateChanged(DeviceChangeEventType.SYSTEM_MODE_CHANGED, systemMode)
 		}
 	}
+
+	isLayerValid(layerCode) {
+		return layerCode in LAYER_NAMES
+	}
+
+	getLayer() {
+		return this.layer
+	}
+
+	setLayer(layerCode) {
+		if (this.isLayerValid(layerCode) && this.layer != layerCode) {
+			this.layer = layerCode
+			return new DeviceStateChanged(DeviceChangeEventType.LAYER_CHANGED, layerCode)
+		}
+	}
 }
 
 class DeviceStateChanged {
@@ -304,6 +319,7 @@ const DeviceChangeEventType = {
 	FLASH_LAST_LOADED_BANK: 'FLASH_LAST_LOADED_BANK',
 	FLASH_LAST_SAVED_BANK: 'FLASH_LAST_SAVED_BANK',
 	SYSTEM_MODE_CHANGED: 'SYSTEM_MODE_CHANGED',
+	LAYER_CHANGED: 'LAYER_CHANGED',
 }
 
 class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
@@ -460,13 +476,10 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 	sendLayer(layer) {
 		if (this.isLayerValid(layer)) {
 			this.sendCommand('6B', '02', layer, '00', '00')
-		} else {
-			this.myWarn('Wrong layer code: ' + layer)
 		}
 	}
-
 	isLayerValid(layer) {
-		return layer in LAYER_NAMES
+		return this.deviceStatus.isLayerValid(layer)
 	}
 
 	sendSourceSignalOnLayer(sourceSignal, layer) {
@@ -476,8 +489,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			} else {
 				this.myWarn('Wrong source code: ' + sourceSignal)
 			}
-		} else {
-			this.myWarn('Wrong layer code: ' + layer)
 		}
 	}
 
@@ -536,8 +547,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			} else {
 				this.myWarn('Wrong mirror code: ' + mirrorStatus)
 			}
-		} else {
-			this.myWarn('Wrong layer code: ' + layer)
 		}
 	}
 
@@ -548,8 +557,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			} else {
 				this.myWarn('Wrong mirror code: ' + mirrorStatus)
 			}
-		} else {
-			this.myWarn('Wrong layer code: ' + layer)
 		}
 	}
 
@@ -564,8 +571,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			} else {
 				this.myWarn('Wrong rotation code: ' + rotationCode)
 			}
-		} else {
-			this.myWarn('Wrong layer code: ' + layer)
 		}
 	}
 
@@ -581,8 +586,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			} else {
 				this.myWarn('Wrong brightness : ' + brightness)
 			}
-		} else {
-			this.myWarn('Wrong layer code: ' + layer)
 		}
 	}
 
@@ -594,8 +597,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			} else {
 				this.myWarn('Wrong brightness : ' + brightness)
 			}
-		} else {
-			this.myWarn('Wrong layer code: ' + layer)
 		}
 	}
 
@@ -620,8 +621,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			} else {
 				this.myWarn('Wrong contrast : ' + contrast)
 			}
-		} else {
-			this.myWarn('Wrong layer code: ' + layer)
 		}
 	}
 
@@ -633,8 +632,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			} else {
 				this.myWarn('Wrong contrast : ' + contrast)
 			}
-		} else {
-			this.myWarn('Wrong layer code: ' + layer)
 		}
 	}
 
@@ -646,8 +643,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			} else {
 				this.myWarn('Wrong contrast : ' + contrast)
 			}
-		} else {
-			this.myWarn('Wrong layer code: ' + layer)
 		}
 	}
 
@@ -659,8 +654,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			} else {
 				this.myWarn('Wrong chroma : ' + chromaValue)
 			}
-		} else {
-			this.myWarn('Wrong layer code: ' + layer)
 		}
 	}
 
@@ -672,8 +665,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			} else {
 				this.myWarn('Wrong hue : ' + hueValue)
 			}
-		} else {
-			this.myWarn('Wrong layer code: ' + layer)
 		}
 	}
 
@@ -708,8 +699,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			} else {
 				this.myWarn('Wrong color temp : ' + colorTemp)
 			}
-		} else {
-			this.myWarn('Wrong layer code: ' + layer)
 		}
 	}
 
@@ -724,8 +713,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			} else {
 				this.myWarn('Wrong gamma code : ' + gammaCode)
 			}
-		} else {
-			this.myWarn('Wrong layer code: ' + layer)
 		}
 	}
 
@@ -741,8 +728,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			} else {
 				this.myWarn('Wrong sharpness : ' + sharpnessValue)
 			}
-		} else {
-			this.myWarn('Wrong layer code: ' + layer)
 		}
 	}
 
@@ -754,8 +739,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			} else {
 				this.myWarn('Wrong sharpness : ' + sharpnessValue)
 			}
-		} else {
-			this.myWarn('Wrong layer code: ' + layer)
 		}
 	}
 
@@ -770,8 +753,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			} else {
 				this.myWarn('Wrong nr : ' + nr)
 			}
-		} else {
-			this.myWarn('Wrong layer code: ' + layer)
 		}
 	}
 
@@ -782,8 +763,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			} else {
 				this.myWarn('Wrong nr : ' + nr)
 			}
-		} else {
-			this.myWarn('Wrong layer code: ' + layer)
 		}
 	}
 
@@ -794,8 +773,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			} else {
 				this.myWarn('Wrong nr : ' + nr)
 			}
-		} else {
-			this.myWarn('Wrong layer code: ' + layer)
 		}
 	}
 
@@ -806,8 +783,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			} else {
 				this.myWarn('Wrong nr : ' + nr)
 			}
-		} else {
-			this.myWarn('Wrong layer code: ' + layer)
 		}
 	}
 
@@ -818,8 +793,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			} else {
 				this.myWarn('Wrong nr : ' + nr)
 			}
-		} else {
-			this.myWarn('Wrong layer code: ' + layer)
 		}
 	}
 
@@ -830,8 +803,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			} else {
 				this.myWarn('Wrong nr : ' + nr)
 			}
-		} else {
-			this.myWarn('Wrong layer code: ' + layer)
 		}
 	}
 
@@ -846,8 +817,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			} else {
 				this.myWarn('Wrong flip : ' + flip)
 			}
-		} else {
-			this.myWarn('Wrong layer code: ' + layer)
 		}
 	}
 
@@ -892,8 +861,8 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 					// layer
 					if (this.isLayerValid(DAT2)) {
 						this.emitConnectionStatusOK()
-						this.deviceStatus.layer = DAT2
-						return this.logFeedback(redeableMsg, 'Layer ' + LAYER_NAMES[this.deviceStatus.layer])
+						this.logFeedback(redeableMsg, 'Layer ' + LAYER_NAMES[DAT2])
+						return this.deviceStatus.setLayer(DAT2)
 					}
 				}
 			} else if (CMD == '72') {
