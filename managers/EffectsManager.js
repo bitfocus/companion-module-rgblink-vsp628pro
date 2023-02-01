@@ -11,6 +11,8 @@ const {
 	LAYER_A,
 	LAYER_B,
 	LayerParameters,
+	COLOR_TEMP_NAMES,
+	COLOR_TEMP_6500,
 } = require('../rgblink_vsp628pro_connector')
 
 const LAYER_NAMES_CHOICES = []
@@ -68,6 +70,14 @@ for (let id in EFFECT_NAMES) {
 	EFFECT_NAMES_CHOICES.push({
 		id: id,
 		label: EFFECT_NAMES[id],
+	})
+}
+
+const COLOR_TEMP_CHOICES = []
+for (let id in COLOR_TEMP_NAMES) {
+	COLOR_TEMP_CHOICES.push({
+		id: id,
+		label: COLOR_TEMP_NAMES[id],
 	})
 }
 
@@ -153,6 +163,16 @@ class EffectsManager {
 						return options.effect.includes('hue')
 					},
 				},
+				{
+					id: 'color',
+					type: 'dropdown',
+					label: 'Color temperature',
+					choices: COLOR_TEMP_CHOICES,
+					default: COLOR_TEMP_6500,
+					isVisible: function (options = new CompanionOptionValues()) {
+						return options.effect.includes('color')
+					},
+				},
 			],
 			callback: async (event) => {
 				self.doAction(event)
@@ -181,6 +201,8 @@ class EffectsManager {
 				return this.getApiConnector().sendSetChroma(layer, event.options.chroma)
 			case EFFECT_HUE:
 				return this.getApiConnector().sendSetHue(layer, event.options.hue)
+			case EFFECT_COLOR_TEMPERATURE:
+				return this.getApiConnector().sendSetColorTemperature(layer, event.options.color)
 		}
 		this.myModule.log(
 			'warn',
@@ -260,6 +282,16 @@ class EffectsManager {
 						return options.effect.includes('hue')
 					},
 				},
+				{
+					id: 'color',
+					type: 'dropdown',
+					label: 'Color temperature',
+					choices: COLOR_TEMP_CHOICES,
+					default: COLOR_TEMP_6500,
+					isVisible: function (options = new CompanionOptionValues()) {
+						return options.effect.includes('color')
+					},
+				},
 			],
 			callback: (feedback) => {
 				return this.checkFeedback(feedback)
@@ -296,6 +328,8 @@ class EffectsManager {
 				return layerStatus.chroma == feedback.options.chroma
 			case EFFECT_HUE:
 				return layerStatus.hue == feedback.options.hue
+			case EFFECT_COLOR_TEMPERATURE:
+				return layerStatus.colorTemperature == feedback.options.color
 		}
 		this.myModule.log(
 			'warn',
@@ -457,6 +491,40 @@ class EffectsManager {
 						{
 							feedbackId: FEEDBACK_SELECTED_EFFECT,
 							options: { layer: LAYER_A, effect: EFFECT_HUE, hue: hue },
+							style: colorsStyle.GREEN_BACKGROUND_WITH_WHITE_TEXT,
+						},
+					],
+				})
+			}
+		}
+
+		{
+			for (let color in COLOR_TEMP_NAMES) {
+				presets.push({
+					type: 'button',
+					category: PRESETS_CATEGORY_NAME,
+					name: 'Color\\n' + COLOR_TEMP_NAMES[color], // A name for the preset. Shown to the user when they hover over it
+					style: {
+						text: 'Color\\n' + COLOR_TEMP_NAMES[color],
+						size: 'auto',
+						color: colorsSingle.WHITE,
+						bgcolor: colorsSingle.BLACK,
+					},
+					steps: [
+						{
+							down: [
+								{
+									actionId: ACTION_SET_EFFECT,
+									options: { layer: LAYER_A, effect: EFFECT_COLOR_TEMPERATURE, color: color },
+								},
+							],
+							up: [],
+						},
+					],
+					feedbacks: [
+						{
+							feedbackId: FEEDBACK_SELECTED_EFFECT,
+							options: { layer: LAYER_A, effect: EFFECT_COLOR_TEMPERATURE, color: color },
 							style: colorsStyle.GREEN_BACKGROUND_WITH_WHITE_TEXT,
 						},
 					],

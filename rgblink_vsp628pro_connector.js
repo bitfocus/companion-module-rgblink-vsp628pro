@@ -147,6 +147,14 @@ ROTATE_90_NAMES[ROTATE_90_OFF] = 'Off (no ratation)'
 ROTATE_90_NAMES[ROTATE_90_LEFT] = 'Left 90°'
 ROTATE_90_NAMES[ROTATE_90_RIGHT] = 'Right 90°'
 
+const COLOR_TEMP_3200 = '00'
+const COLOR_TEMP_6500 = '01'
+const COLOR_TEMP_9300 = '02'
+const COLOR_TEMP_NAMES = []
+COLOR_TEMP_NAMES[COLOR_TEMP_3200] = '3200K'
+COLOR_TEMP_NAMES[COLOR_TEMP_6500] = '6500K'
+COLOR_TEMP_NAMES[COLOR_TEMP_9300] = '9300K'
+
 class LayerParameters {
 	sourceId
 	hMirror
@@ -590,6 +598,22 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		return hue >= -180 && hue <= 180
 	}
 
+	isColorTemperatureValid(colorTemperature) {
+		return colorTemperature in COLOR_TEMP_NAMES
+	}
+
+	sendSetColorTemperature(layer, colorTemp) {
+		if (this.isLayerValid(layer)) {
+			if (this.isColorTemperatureValid(colorTemp)) {
+				this.sendCommand('80', '08', layer, colorTemp, '00')
+			} else {
+				this.myWarn('Wrong color temp : ' + colorTemp)
+			}
+		} else {
+			this.myWarn('Wrong layer code: ' + layer)
+		}
+	}
+
 	// this is really spaghetti code, and need refactor in future
 	consumeFeedback(ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4) {
 		let redeableMsg = [ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4].join(' ')
@@ -822,9 +846,15 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 								break
 							case '08':
 							case '09':
-								this.emitConnectionStatusOK()
-								layer.colorTemperature = value
-								return this.logFeedback(redeableMsg, onLayerMsgPart + ' color temperature is: ' + value)
+								if (this.isColorTemperatureValid(DAT3)) {
+									this.emitConnectionStatusOK()
+									layer.colorTemperature = DAT3
+									return this.logFeedback(
+										redeableMsg,
+										onLayerMsgPart + ' color temperature is: ' + COLOR_TEMP_NAMES[DAT3]
+									)
+								}
+								break
 							case '1A':
 							case '1B':
 								this.emitConnectionStatusOK()
@@ -953,3 +983,6 @@ module.exports.MIRROR_NAMES = MIRROR_NAMES
 
 module.exports.ROTATE_90_NAMES = ROTATE_90_NAMES
 module.exports.ROTATE_90_LEFT = ROTATE_90_LEFT
+
+module.exports.COLOR_TEMP_NAMES = COLOR_TEMP_NAMES
+module.exports.COLOR_TEMP_6500 = COLOR_TEMP_6500
