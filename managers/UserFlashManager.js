@@ -1,3 +1,6 @@
+const { colorsStyle, colorsSingle } = require('./colors')
+const { RGBLinkVSP628ProConnector, DeviceStateChanged, DeviceChangeEventType } = require('../api/rgblink_vsp628pro_connector')
+
 const ACTION_SAVE_TO_USER_FLASH = 'flash_save'
 const ACTION_LOAD_FROM_USER_FLASH = 'flash_load'
 
@@ -12,8 +15,10 @@ for (let i = 1; i <= 21; i++) {
 	})
 }
 
-const { colorsStyle, colorsSingle } = require('./colors')
-const { RGBLinkVSP628ProConnector } = require('../api/rgblink_vsp628pro_connector')
+const Variables = {
+	FLASH_LAST_SAVED_BANK: 'flashLastSavedBank',
+	FLASH_LAST_LOADED_BANK: 'flashLastLoadedBank',
+}
 
 class UserFlashManager {
 	//@
@@ -44,7 +49,11 @@ class UserFlashManager {
 				},
 			],
 			callback: async (event) => {
-				this.getApiConnector().sendSaveToUserFlash(event.options.mode)
+				try {
+					this.getApiConnector().sendSaveToUserFlash(event.options.mode)
+				} catch (ex) {
+					console.log(ex)
+				}
 			},
 		}
 
@@ -60,15 +69,25 @@ class UserFlashManager {
 				},
 			],
 			callback: async (event) => {
-				this.getApiConnector().sendLoadFromUserFlash(event.options.mode)
+				try {
+					this.getApiConnector().sendLoadFromUserFlash(event.options.mode)
+				} catch (ex) {
+					console.log(ex)
+				}
 			},
 		}
 
 		return actions
 	}
 
-	getFeedbacksNames() {
-		return [FEEDBACK_FLASH_LAST_SAVED, FEEDBACK_FLASH_LAST_LOADED]
+	getFeedbacksNames(changedEvent = new DeviceStateChanged()) {
+		switch (changedEvent.event) {
+			case DeviceChangeEventType.FLASH_LAST_LOADED_BANK:
+				return [FEEDBACK_FLASH_LAST_LOADED]
+			case DeviceChangeEventType.FLASH_LAST_SAVED_BANK:
+				return [FEEDBACK_FLASH_LAST_SAVED]
+		}
+		return []
 	}
 
 	getFeedbacks() {
@@ -89,7 +108,7 @@ class UserFlashManager {
 				},
 			],
 			callback: (feedback) => {
-				return this.getApiConnector().deviceStatus.flashUserMode.lastSavedMode == feedback.options.mode
+				return this.getApiConnector().deviceStatus.getFlashLastSavedBank() == feedback.options.mode
 			},
 		}
 		feedbacks[FEEDBACK_FLASH_LAST_LOADED] = {
@@ -107,7 +126,7 @@ class UserFlashManager {
 				},
 			],
 			callback: (feedback) => {
-				return this.getApiConnector().deviceStatus.flashUserMode.lastLoadedMode == feedback.options.mode
+				return this.getApiConnector().deviceStatus.getFlashLastLoadedBank() == feedback.options.mode
 			},
 		}
 		return feedbacks
@@ -182,12 +201,28 @@ class UserFlashManager {
 
 	getVariablesDefinitions() {
 		let variables = []
-
+		variables.push({
+			variableId: Variables.FLASH_LAST_LOADED_BANK,
+			name: 'Last loaded bank (flash)',
+		})
+		variables.push({
+			variableId: Variables.FLASH_LAST_SAVED_BANK,
+			name: 'Last saved bank (flash)',
+		})
 		return variables
 	}
 
-	getVariableValueForUpdate(/*changedEvent = new DeviceStateChanged()*/) {
-		return {}
+	getVariableValueForUpdate(changedEvent = new DeviceStateChanged()) {
+		let retObj = {}
+		switch (changedEvent.event) {
+			case DeviceChangeEventType.FLASH_LAST_LOADED_BANK:
+				retObj[Variables.FLASH_LAST_LOADED_BANK] = changedEvent.newValue;
+				break;
+			case DeviceChangeEventType.FLASH_LAST_SAVED_BANK:
+				retObj[Variables.FLASH_LAST_SAVED_BANK] = changedEvent.newValue;
+				break;
+		}
+		return retObj
 	}
 }
 

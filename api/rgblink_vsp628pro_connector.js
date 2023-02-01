@@ -236,7 +236,7 @@ class DeviceStatus {
 	}
 
 	setFrontPanelLockStatus(newStatus) {
-		if (this.frontPanelLocked != newStatus) {
+		if (this.isFrontPanelLockStatusValid(newStatus) && this.frontPanelLocked != newStatus) {
 			this.frontPanelLocked = newStatus
 			return new DeviceStateChanged(DeviceChangeEventType.FRONT_PANEL_LOCK_CHANGED, newStatus)
 		}
@@ -244,6 +244,33 @@ class DeviceStatus {
 
 	getFrontPanelLockStatus() {
 		return this.frontPanelLocked
+	}
+
+	ifFlashBankNumberValid(number) {
+		number = parseInt(number)
+		return number >= 1 && number <= 21
+	}
+
+	getFlashLastLoadedBank() {
+		return this.flashUserMode.lastLoadedMode
+	}
+
+	getFlashLastSavedBank() {
+		return this.flashUserMode.lastSavedMode
+	}
+
+	setFlashLastLoadedBank(newBank) {
+		if (this.ifFlashBankNumberValid(newBank) && this.flashUserMode.lastLoadedMode != newBank) {
+			this.flashUserMode.lastLoadedMode = newBank
+			return new DeviceStateChanged(DeviceChangeEventType.FLASH_LAST_LOADED_BANK, newBank)
+		}
+	}
+
+	setFlashLastSavedBank(newBank) {
+		if (this.ifFlashBankNumberValid(newBank) && this.flashUserMode.lastSavedMode != newBank) {
+			this.flashUserMode.lastSavedMode = newBank
+			return new DeviceStateChanged(DeviceChangeEventType.FLASH_LAST_SAVED_BANK, newBank)
+		}
 	}
 }
 
@@ -259,6 +286,8 @@ class DeviceStateChanged {
 
 const DeviceChangeEventType = {
 	FRONT_PANEL_LOCK_CHANGED: 'FRONT_PANEL_LOCK_CHANGED',
+	FLASH_LAST_LOADED_BANK: 'FLASH_LAST_LOADED_BANK',
+	FLASH_LAST_SAVED_BANK: 'FLASH_LAST_SAVED_BANK'
 }
 
 class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
@@ -368,22 +397,21 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 	sendSaveToUserFlash(flashUserMode) {
 		if (this.isFlashUserModeValid(flashUserMode)) {
 			this.sendCommand('68', '08' /*save to user flash*/, this.byteToTwoSignHex(flashUserMode), '00', '00')
-		} else {
-			this.myWarn('Wrong mode: ' + flashUserMode)
 		}
 	}
 
 	sendLoadFromUserFlash(flashUserMode) {
 		if (this.isFlashUserModeValid(flashUserMode)) {
 			this.sendCommand('68', '09' /*load from user flash*/, this.byteToTwoSignHex(flashUserMode), '00', '00')
-		} else {
-			this.myWarn('Wrong mode: ' + flashUserMode)
 		}
 	}
 
 	isFlashUserModeValid(flashUserMode) {
-		let intValue = parseInt(flashUserMode)
-		return intValue >= 1 && intValue <= 21
+		let valid = this.deviceStatus.ifFlashBankNumberValid(flashUserMode)
+		if (!valid) {
+			this.myWarn('Wrong flash bank number: ' + flashUserMode)
+		}
+		return valid
 	}
 
 	sendSystemMode(systemMode) {
@@ -825,18 +853,15 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 					// Save To the user flash(0x08)
 					if (this.isFlashUserModeValid(DAT2)) {
 						this.emitConnectionStatusOK()
-						this.deviceStatus.flashUserMode.lastSavedMode = parseInt(DAT2, this.PARSE_INT_HEX_MODE)
-						return this.logFeedback(redeableMsg, 'Save to user flash, mode ' + parseInt(DAT2, this.PARSE_INT_HEX_MODE))
+						this.logFeedback(redeableMsg, 'Save to user flash, mode ' + parseInt(DAT2, this.PARSE_INT_HEX_MODE))
+						return this.deviceStatus.setFlashLastSavedBank(parseInt(DAT2, this.PARSE_INT_HEX_MODE))
 					}
 				} else if (DAT1 == '09') {
 					// Load from the user flash(0x09)
 					if (this.isFlashUserModeValid(DAT2)) {
 						this.emitConnectionStatusOK()
-						this.deviceStatus.flashUserMode.lastLoadedMode = parseInt(DAT2, this.PARSE_INT_HEX_MODE)
-						return this.logFeedback(
-							redeableMsg,
-							'Load from user flash, mode ' + parseInt(DAT2, this.PARSE_INT_HEX_MODE)
-						)
+						this.logFeedback(redeableMsg, 'Load from user flash, mode ' + parseInt(DAT2, this.PARSE_INT_HEX_MODE))
+						return this.deviceStatus.setFlashLastLoadedBank(parseInt(DAT2, this.PARSE_INT_HEX_MODE))
 					}
 				}
 			} else if (CMD == '6B') {

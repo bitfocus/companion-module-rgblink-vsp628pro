@@ -1,9 +1,3 @@
-const ACTION_FRONT_PANEL_LOCK = 'lock'
-const ACTION_FRONT_PANEL_UNLOCK = 'unlock'
-
-const FEEDBACK_FRONT_PANEL_LOCKED = 'locked'
-const FEEDBACK_FRONT_PANEL_UNLOCKED = 'unlocked'
-
 const {
 	FRONT_PANEL_LOCKED,
 	FRONT_PANEL_UNLOCKED,
@@ -12,6 +6,12 @@ const {
 	DeviceChangeEventType,
 } = require('../api/rgblink_vsp628pro_connector')
 const { colorsStyle, colorsSingle } = require('./colors')
+
+const ACTION_FRONT_PANEL_LOCK = 'lock'
+const ACTION_FRONT_PANEL_UNLOCK = 'unlock'
+
+const FEEDBACK_FRONT_PANEL_LOCKED = 'locked'
+const FEEDBACK_FRONT_PANEL_UNLOCKED = 'unlocked'
 
 const Variables = {
 	VARIABLE_FRONT_PANEL_LOCK_STATUS: 'frontPanelLockStatus',
