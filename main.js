@@ -1,6 +1,6 @@
 const { InstanceBase, Regex, runEntrypoint, InstanceStatus } = require('@companion-module/base')
 const UpgradeScripts = require('./upgrades')
-const { RGBLinkVSP628ProConnector } = require('./rgblink_vsp628pro_connector')
+const { RGBLinkVSP628ProConnector } = require('./api/rgblink_vsp628pro_connector')
 
 const FrontPanelManager = require('./managers/FrontPanelManager')
 const UserFlashManager = require('./managers/UserFlashManager')
@@ -11,7 +11,7 @@ const OutputResolutionManager = require('./managers/OutputResolutionManager')
 const FreezeManager = require('./managers/FreezeManager')
 const MirrorAndRotateManager = require('./managers/MirrorAndRotateManager')
 const EffectsManager = require('./managers/EffectsManager')
-const { ApiConfig } = require('./rgblinkapiconnector')
+const { ApiConfig } = require('./api/rgblinkapiconnector')
 
 class VSP628ProModuleInstance extends InstanceBase {
 	apiConnector = new RGBLinkVSP628ProConnector()

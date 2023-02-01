@@ -8,7 +8,7 @@ const {
 	LAYER_NAMES,
 	LAYER_A,
 	DeviceStateChanged,
-} = require('../rgblink_vsp628pro_connector')
+} = require('../api/rgblink_vsp628pro_connector')
 
 const LAYER_NAMES_CHOICES = []
 for (let id in LAYER_NAMES) {

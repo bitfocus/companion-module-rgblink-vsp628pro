@@ -10,7 +10,7 @@ const {
 	RGBLinkVSP628ProConnector,
 	DeviceStateChanged,
 	DeviceChangeEventType,
-} = require('./../rgblink_vsp628pro_connector')
+} = require('../api/rgblink_vsp628pro_connector')
 const { colorsStyle, colorsSingle } = require('./colors')
 
 const Variables = {

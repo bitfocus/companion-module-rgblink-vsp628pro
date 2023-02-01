@@ -11,7 +11,7 @@ const {
 	OUTPUT1,
 	OUTPUT2,
 	DeviceStateChanged,
-} = require('../rgblink_vsp628pro_connector')
+} = require('../api/rgblink_vsp628pro_connector')
 
 const RESOLUTION_NAMES_CHOICES = []
 for (let id in OUTPUT_RESOLUTIONS_NAMES) {

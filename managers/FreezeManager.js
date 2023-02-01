@@ -8,7 +8,7 @@ const {
 	FREEZE_NAMES,
 	FREEZE_STATUS_FREEZE,
 	DeviceStateChanged,
-} = require('../rgblink_vsp628pro_connector')
+} = require('../api/rgblink_vsp628pro_connector')
 
 const FREEZE_NAMES_CHOICES = []
 for (let id in FREEZE_NAMES) {

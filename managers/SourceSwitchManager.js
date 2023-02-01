@@ -11,7 +11,7 @@ const {
 	SOURCE_SIGNAL_HDMI,
 	LAYER_B,
 	DeviceStateChanged,
-} = require('../rgblink_vsp628pro_connector')
+} = require('../api/rgblink_vsp628pro_connector')
 
 const LAYER_NAMES_CHOICES = []
 for (let id in LAYER_NAMES) {

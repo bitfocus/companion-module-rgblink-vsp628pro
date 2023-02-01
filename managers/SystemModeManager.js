@@ -8,7 +8,7 @@ const {
 	SYSTEM_MODE_NAMES,
 	SYSTEM_MODE_STANDARD,
 	DeviceStateChanged,
-} = require('../rgblink_vsp628pro_connector')
+} = require('../api/rgblink_vsp628pro_connector')
 
 const SYSTEM_MODE_NAMES_CHOICES = []
 for (let id in SYSTEM_MODE_NAMES) {
