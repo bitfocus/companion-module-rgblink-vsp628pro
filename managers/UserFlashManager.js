@@ -1,5 +1,9 @@
 const { colorsStyle, colorsSingle } = require('./colors')
-const { RGBLinkVSP628ProConnector, DeviceStateChanged, DeviceChangeEventType } = require('../api/rgblink_vsp628pro_connector')
+const {
+	RGBLinkVSP628ProConnector,
+	DeviceStateChanged,
+	DeviceChangeEventType,
+} = require('../api/rgblink_vsp628pro_connector')
 
 const ACTION_SAVE_TO_USER_FLASH = 'flash_save'
 const ACTION_LOAD_FROM_USER_FLASH = 'flash_load'
@@ -216,11 +220,11 @@ class UserFlashManager {
 		let retObj = {}
 		switch (changedEvent.event) {
 			case DeviceChangeEventType.FLASH_LAST_LOADED_BANK:
-				retObj[Variables.FLASH_LAST_LOADED_BANK] = changedEvent.newValue;
-				break;
+				retObj[Variables.FLASH_LAST_LOADED_BANK] = changedEvent.newValue
+				break
 			case DeviceChangeEventType.FLASH_LAST_SAVED_BANK:
-				retObj[Variables.FLASH_LAST_SAVED_BANK] = changedEvent.newValue;
-				break;
+				retObj[Variables.FLASH_LAST_SAVED_BANK] = changedEvent.newValue
+				break
 		}
 		return retObj
 	}

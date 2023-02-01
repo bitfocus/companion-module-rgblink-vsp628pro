@@ -1,5 +1,11 @@
 const { colorsStyle, colorsSingle } = require('./colors')
-const { RGBLinkVSP628ProConnector, LAYER_NAMES, LAYER_A, DeviceStateChanged, DeviceChangeEventType } = require('../api/rgblink_vsp628pro_connector')
+const {
+	RGBLinkVSP628ProConnector,
+	LAYER_NAMES,
+	LAYER_A,
+	DeviceStateChanged,
+	DeviceChangeEventType,
+} = require('../api/rgblink_vsp628pro_connector')
 
 const ACTION_SET_LAYER = 'set_layer'
 
@@ -141,9 +147,9 @@ class LayerManager {
 		let retObj = {}
 		switch (changedEvent.event) {
 			case DeviceChangeEventType.LAYER_CHANGED:
-				retObj[Variables.LAYER_CODE] = changedEvent.newValue;
-				retObj[Variables.LAYER_NAME] = LAYER_NAMES[changedEvent.newValue];
-				break;
+				retObj[Variables.LAYER_CODE] = changedEvent.newValue
+				retObj[Variables.LAYER_NAME] = LAYER_NAMES[changedEvent.newValue]
+				break
 		}
 		return retObj
 	}

@@ -11,7 +11,6 @@ const ACTION_SET_SYSTEM_MODE = 'set_system_mode'
 
 const FEEDBACK_SYSTEM_MODE = 'feedback_system_mode'
 
-
 const SYSTEM_MODE_NAMES_CHOICES = []
 for (let id in SYSTEM_MODE_NAMES) {
 	SYSTEM_MODE_NAMES_CHOICES.push({
@@ -147,9 +146,9 @@ class SystemModeManager {
 		let retObj = {}
 		switch (changedEvent.event) {
 			case DeviceChangeEventType.SYSTEM_MODE_CHANGED:
-				retObj[Variables.SYSTEM_MODE_CODE] = changedEvent.newValue;
-				retObj[Variables.SYSTEM_MODE_NAME] = SYSTEM_MODE_NAMES[changedEvent.newValue];
-				break;
+				retObj[Variables.SYSTEM_MODE_CODE] = changedEvent.newValue
+				retObj[Variables.SYSTEM_MODE_NAME] = SYSTEM_MODE_NAMES[changedEvent.newValue]
+				break
 		}
 		return retObj
 	}
