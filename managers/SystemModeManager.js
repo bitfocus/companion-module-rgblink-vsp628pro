@@ -7,7 +7,6 @@ const {
 	RGBLinkVSP628ProConnector,
 	SYSTEM_MODE_NAMES,
 	SYSTEM_MODE_STANDARD,
-	DeviceStateChanged,
 } = require('../api/rgblink_vsp628pro_connector')
 
 const SYSTEM_MODE_NAMES_CHOICES = []
@@ -125,7 +124,7 @@ class SystemModeManager {
 		return variables
 	}
 
-	getVariableValueForUpdate(changedEvent = new DeviceStateChanged()) {
+	getVariableValueForUpdate(/*changedEvent = new DeviceStateChanged()*/) {
 		return {}
 	}
 }

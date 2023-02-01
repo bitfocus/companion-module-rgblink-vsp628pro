@@ -3,12 +3,7 @@ const ACTION_SET_LAYER = 'set_layer'
 const FEEDBACK_LAYER = 'feedback_selected_layer'
 
 const { colorsStyle, colorsSingle } = require('./colors')
-const {
-	RGBLinkVSP628ProConnector,
-	LAYER_NAMES,
-	LAYER_A,
-	DeviceStateChanged,
-} = require('../api/rgblink_vsp628pro_connector')
+const { RGBLinkVSP628ProConnector, LAYER_NAMES, LAYER_A } = require('../api/rgblink_vsp628pro_connector')
 
 const LAYER_NAMES_CHOICES = []
 for (let id in LAYER_NAMES) {
@@ -126,7 +121,7 @@ class LayerManager {
 		return variables
 	}
 
-	getVariableValueForUpdate(changedEvent = new DeviceStateChanged()) {
+	getVariableValueForUpdate(/*changedEvent = new DeviceStateChanged()*/) {
 		return {}
 	}
 }
