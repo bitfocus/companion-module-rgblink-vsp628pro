@@ -79,14 +79,6 @@ for (let id in EFFECT_NAMES) {
 	})
 }
 
-// const COLOR_TEMP_CHOICES = []
-// for (let id in COLOR_TEMP_NAMES) {
-// 	COLOR_TEMP_CHOICES.push({
-// 		id: id,
-// 		label: COLOR_TEMP_NAMES[id],
-// 	})
-// }
-
 const COLOR_TEMP_CHOICES = []
 for (let id in COLOR_TEMP_NAMES) {
 	COLOR_TEMP_CHOICES.push({
