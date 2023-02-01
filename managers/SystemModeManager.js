@@ -1,13 +1,16 @@
-const ACTION_SET_SYSTEM_MODE = 'set_system_mode'
-
-const FEEDBACK_SYSTEM_MODE = 'feedback_system_mode'
-
 const { colorsStyle, colorsSingle } = require('./colors')
 const {
 	RGBLinkVSP628ProConnector,
 	SYSTEM_MODE_NAMES,
 	SYSTEM_MODE_STANDARD,
+	DeviceStateChanged,
+	DeviceChangeEventType,
 } = require('../api/rgblink_vsp628pro_connector')
+
+const ACTION_SET_SYSTEM_MODE = 'set_system_mode'
+
+const FEEDBACK_SYSTEM_MODE = 'feedback_system_mode'
+
 
 const SYSTEM_MODE_NAMES_CHOICES = []
 for (let id in SYSTEM_MODE_NAMES) {
@@ -15,6 +18,11 @@ for (let id in SYSTEM_MODE_NAMES) {
 		id: id,
 		label: SYSTEM_MODE_NAMES[id],
 	})
+}
+
+const Variables = {
+	SYSTEM_MODE_CODE: 'systemModeCode',
+	SYSTEM_MODE_NAME: 'systemModeName',
 }
 
 class SystemModeManager {
@@ -52,8 +60,12 @@ class SystemModeManager {
 		return actions
 	}
 
-	getFeedbacksNames() {
-		return [FEEDBACK_SYSTEM_MODE]
+	getFeedbacksNames(changedEvent = new DeviceStateChanged()) {
+		switch (changedEvent.event) {
+			case DeviceChangeEventType.SYSTEM_MODE_CHANGED:
+				return [FEEDBACK_SYSTEM_MODE]
+		}
+		return []
 	}
 
 	getFeedbacks() {
@@ -74,7 +86,7 @@ class SystemModeManager {
 				},
 			],
 			callback: (feedback) => {
-				return this.getApiConnector().deviceStatus.systemMode == feedback.options.mode
+				return this.getApiConnector().deviceStatus.getSystemMode() == feedback.options.mode
 			},
 		}
 		return feedbacks
@@ -120,12 +132,26 @@ class SystemModeManager {
 
 	getVariablesDefinitions() {
 		let variables = []
-
+		variables.push({
+			variableId: Variables.SYSTEM_MODE_CODE,
+			name: 'System mode code',
+		})
+		variables.push({
+			variableId: Variables.SYSTEM_MODE_NAME,
+			name: 'System mode name',
+		})
 		return variables
 	}
 
-	getVariableValueForUpdate(/*changedEvent = new DeviceStateChanged()*/) {
-		return {}
+	getVariableValueForUpdate(changedEvent = new DeviceStateChanged()) {
+		let retObj = {}
+		switch (changedEvent.event) {
+			case DeviceChangeEventType.SYSTEM_MODE_CHANGED:
+				retObj[Variables.SYSTEM_MODE_CODE] = changedEvent.newValue;
+				retObj[Variables.SYSTEM_MODE_NAME] = SYSTEM_MODE_NAMES[changedEvent.newValue];
+				break;
+		}
+		return retObj
 	}
 }
 

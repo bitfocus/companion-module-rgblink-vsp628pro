@@ -3,7 +3,7 @@
 const { UDPHelper } = require('@companion-module/base')
 
 const MAX_COMMANDS_WAITING_FOR_RESPONSES_FOR_POLLING = 5
-const COMMANDS_EXPIRE_TIME_SECONDS = 10
+const COMMANDS_EXPIRE_TIME_SECONDS = 15
 
 class PollingCommand {
 	CMD
@@ -188,7 +188,7 @@ class RGBLinkApiConnector {
 	doPolling(force = false) {
 		// send polling commands - which asks about device status
 		// don't wait for more than 5 commands (rgblink requirements described near SN field in API specification)
-		// remove commands with no response in 10 seconds
+		// remove commands with no response in 15 seconds
 
 		let deleted = this.sentCommandStorage.deleteExpiredCommands()
 		if (deleted.length > 0) {

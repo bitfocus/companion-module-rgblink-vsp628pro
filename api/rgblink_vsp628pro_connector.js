@@ -272,6 +272,21 @@ class DeviceStatus {
 			return new DeviceStateChanged(DeviceChangeEventType.FLASH_LAST_SAVED_BANK, newBank)
 		}
 	}
+
+	isSystemModeValid(systemMode) {
+		return systemMode in SYSTEM_MODE_NAMES
+	}
+
+	getSystemMode() {
+		return this.systemMode
+	}
+
+	setSystemMode(systemMode) {
+		if (this.isSystemModeValid(systemMode) && this.systemMode != systemMode) {
+			this.systemMode = systemMode
+			return new DeviceStateChanged(DeviceChangeEventType.SYSTEM_MODE_CHANGED, systemMode)
+		}
+	}
 }
 
 class DeviceStateChanged {
@@ -287,7 +302,8 @@ class DeviceStateChanged {
 const DeviceChangeEventType = {
 	FRONT_PANEL_LOCK_CHANGED: 'FRONT_PANEL_LOCK_CHANGED',
 	FLASH_LAST_LOADED_BANK: 'FLASH_LAST_LOADED_BANK',
-	FLASH_LAST_SAVED_BANK: 'FLASH_LAST_SAVED_BANK'
+	FLASH_LAST_SAVED_BANK: 'FLASH_LAST_SAVED_BANK',
+	SYSTEM_MODE_CHANGED: 'SYSTEM_MODE_CHANGED',
 }
 
 class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
@@ -418,13 +434,15 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		if (this.isSystemModeValid(systemMode)) {
 			let DAT2 = this.internalGetDat2ForSystemMode(systemMode)
 			this.sendCommand('6B', '00', DAT2, systemMode, '00')
-		} else {
-			this.myWarn('Wrong system mode: ' + systemMode)
 		}
 	}
 
 	isSystemModeValid(systemMode) {
-		return systemMode in SYSTEM_MODE_NAMES
+		let valid = this.deviceStatus.isSystemModeValid(systemMode)
+		if (!valid) {
+			this.myWarn('Wrong system mode code: ' + systemMode)
+		}
+		return valid
 	}
 
 	internalGetDat2ForSystemMode(systemMode) {
@@ -435,8 +453,6 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 				return '00'
 			}
 			// this.myWarn('Unsupported systemMode: ' + systemMode + '. This must be fixed by developer.')
-		} else {
-			this.myWarn('Wrong system mode: ' + systemMode)
 		}
 		return '00'
 	}
@@ -869,8 +885,8 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 					// system mode standard/pip/dula 2k/switcher
 					if (this.isSystemModeValid(DAT3)) {
 						this.emitConnectionStatusOK()
-						this.deviceStatus.systemMode = DAT3
-						return this.logFeedback(redeableMsg, 'Mode ' + SYSTEM_MODE_NAMES[this.deviceStatus.systemMode])
+						this.logFeedback(redeableMsg, 'Mode ' + SYSTEM_MODE_NAMES[DAT3])
+						return this.deviceStatus.setSystemMode(DAT3)
 					}
 				} else if (DAT1 == '02' || DAT1 == '03') {
 					// layer
