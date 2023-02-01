@@ -195,6 +195,17 @@ class EffectsManager {
 						return options.effect.includes('gamma')
 					},
 				},
+				{
+					id: 'sharpness',
+					type: 'number',
+					label: 'Sharpness (from -10 to 10)',
+					min: -10,
+					max: 10,
+					default: '0',
+					isVisible: function (options = new CompanionOptionValues()) {
+						return options.effect.includes('sharpness')
+					},
+				},
 			],
 			callback: async (event) => {
 				try {
@@ -231,6 +242,10 @@ class EffectsManager {
 				return this.getApiConnector().sendSetColorTemperature(layer, event.options.color)
 			case EFFECT_GAMMA:
 				return this.getApiConnector().sendSetGamma(layer, event.options.gamma)
+			case EFFECT_SHARPNESS_HORIZONTAL:
+				return this.getApiConnector().sendSetSharpnessHorizontal(layer, event.options.sharpness)
+			case EFFECT_SHARPNESS_VERTICAL:
+				return this.getApiConnector().sendSetSharpnessVertical(layer, event.options.sharpness)
 		}
 		this.myModule.log(
 			'warn',
@@ -330,6 +345,17 @@ class EffectsManager {
 						return options.effect.includes('gamma')
 					},
 				},
+				{
+					id: 'sharpness',
+					type: 'number',
+					label: 'Sharpness (from -10 to 10)',
+					min: -10,
+					max: 10,
+					default: '0',
+					isVisible: function (options = new CompanionOptionValues()) {
+						return options.effect.includes('sharpness')
+					},
+				},
 			],
 			callback: (feedback) => {
 				return this.checkFeedback(feedback)
@@ -370,6 +396,10 @@ class EffectsManager {
 				return layerStatus.colorTemperature == feedback.options.color
 			case EFFECT_GAMMA:
 				return layerStatus.gamma == feedback.options.gamma
+			case EFFECT_SHARPNESS_HORIZONTAL:
+				return layerStatus.sharpness.horizontal == feedback.options.sharpness
+			case EFFECT_SHARPNESS_VERTICAL:
+				return layerStatus.sharpness.vertical == feedback.options.sharpness
 		}
 		this.myModule.log(
 			'warn',
@@ -605,6 +635,48 @@ class EffectsManager {
 						},
 					],
 				})
+			}
+		}
+
+		{
+			let axisActionMap = {
+				H: EFFECT_SHARPNESS_HORIZONTAL,
+				V: EFFECT_SHARPNESS_VERTICAL,
+			}
+			let sharpnessValues = [-10, 0, 10]
+			for (let axisName in axisActionMap) {
+				for (let sharpnessIdx in sharpnessValues) {
+					let sharpness = sharpnessValues[sharpnessIdx]
+					presets.push({
+						type: 'button',
+						category: PRESETS_CATEGORY_NAME,
+						name: axisName + ' sharpness\\n' + sharpness, // A name for the preset. Shown to the user when they hover over it
+						style: {
+							text: axisName + ' sharpness\\n' + sharpness,
+							size: 'auto',
+							color: colorsSingle.WHITE,
+							bgcolor: colorsSingle.BLACK,
+						},
+						steps: [
+							{
+								down: [
+									{
+										actionId: ACTION_SET_EFFECT,
+										options: { layer: LAYER_A, effect: axisActionMap[axisName], sharpness: sharpness },
+									},
+								],
+								up: [],
+							},
+						],
+						feedbacks: [
+							{
+								feedbackId: FEEDBACK_SELECTED_EFFECT,
+								options: { layer: LAYER_A, effect: axisActionMap[axisName], sharpness: sharpness },
+								style: colorsStyle.GREEN_BACKGROUND_WITH_WHITE_TEXT,
+							},
+						],
+					})
+				}
 			}
 		}
 

@@ -648,6 +648,36 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		}
 	}
 
+	isSharpnessValid(sharpnessValue) {
+		return sharpnessValue >= -10 && sharpnessValue <= 10
+	}
+
+	sendSetSharpnessHorizontal(layer, sharpnessValue) {
+		if (this.isLayerValid(layer)) {
+			if (this.isSharpnessValid(sharpnessValue)) {
+				var [DAT3, DAT4] = this.internalGetDat34ForDecValue(sharpnessValue)
+				this.sendCommand('80', '0A', layer, DAT3, DAT4)
+			} else {
+				this.myWarn('Wrong sharpness : ' + sharpnessValue)
+			}
+		} else {
+			this.myWarn('Wrong layer code: ' + layer)
+		}
+	}
+
+	sendSetSharpnessVertical(layer, sharpnessValue) {
+		if (this.isLayerValid(layer)) {
+			if (this.isSharpnessValid(sharpnessValue)) {
+				var [DAT3, DAT4] = this.internalGetDat34ForDecValue(sharpnessValue)
+				this.sendCommand('80', '0C', layer, DAT3, DAT4)
+			} else {
+				this.myWarn('Wrong sharpness : ' + sharpnessValue)
+			}
+		} else {
+			this.myWarn('Wrong layer code: ' + layer)
+		}
+	}
+
 	// this is really spaghetti code, and need refactor in future
 	consumeFeedback(ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4) {
 		let redeableMsg = [ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4].join(' ')
@@ -899,14 +929,20 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 								break
 							case '0A':
 							case '0B':
-								this.emitConnectionStatusOK()
-								layer.sharpness.horizontal = value
-								return this.logFeedback(redeableMsg, onLayerMsgPart + ' sharpness horizontal is: ' + value)
+								if (this.isSharpnessValid(value)) {
+									this.emitConnectionStatusOK()
+									layer.sharpness.horizontal = value
+									return this.logFeedback(redeableMsg, onLayerMsgPart + ' sharpness horizontal is: ' + value)
+								}
+								break
 							case '0C':
 							case '0D':
-								this.emitConnectionStatusOK()
-								layer.sharpness.vertical = value
-								return this.logFeedback(redeableMsg, onLayerMsgPart + ' sharpness vertical is: ' + value)
+								if (this.isSharpnessValid(value)) {
+									this.emitConnectionStatusOK()
+									layer.sharpness.vertical = value
+									return this.logFeedback(redeableMsg, onLayerMsgPart + ' sharpness vertical is: ' + value)
+								}
+								break
 							case '0E':
 							case '0F':
 								this.emitConnectionStatusOK()
