@@ -1,6 +1,6 @@
 const { InstanceBase, Regex, runEntrypoint, InstanceStatus } = require('@companion-module/base')
 const UpgradeScripts = require('./upgrades')
-const { RGBLinkVSP628ProConnector } = require('./rgblink_vsp628pro_connector')
+const { RGBLinkVSP628ProConnector, FRONT_PANEL_LOCKED, FRONT_PANEL_UNLOCKED } = require('./rgblink_vsp628pro_connector')
 
 const FrontPanelManager = require('./managers/FrontPanelManager')
 const UserFlashManager = require('./managers/UserFlashManager')
@@ -42,6 +42,7 @@ class VSP628ProModuleInstance extends InstanceBase {
 			this.updateActions()
 			this.updateFeedbacks()
 			this.updatePresets()
+			this.updateVariables()
 
 			this.log('debug', 'RGBlink VSP628PRO: init finished')
 		} catch (ex) {
@@ -134,6 +135,17 @@ class VSP628ProModuleInstance extends InstanceBase {
 		this.setPresetDefinitions(presets)
 	}
 
+	updateVariables() {
+		let variables = [];
+
+		// variables.push({
+		// 	variableId: 'frontPanelLocked',
+		// 	name: 'Is front panel locked'
+		// })
+
+		this.setVariableDefinitions(variables)
+	}
+
 	initApiConnector() {
 		let self = this
 		this.apiConnector = new RGBLinkVSP628ProConnector(
@@ -142,6 +154,9 @@ class VSP628ProModuleInstance extends InstanceBase {
 		this.apiConnector.enableLog(this)
 		this.apiConnector.on(this.apiConnector.EVENT_NAME_ON_DEVICE_STATE_CHANGED, () => {
 			self.checkAllFeedbacks()
+			// this.setVariableValues({
+			// 	frontPanelLocked: FRONT_PANEL_LOCKED == self.apiConnector.deviceStatus.frontPanelLocked ? 'Locked' : 'Unlocked'
+			// })
 		})
 		this.apiConnector.on(this.apiConnector.EVENT_NAME_ON_CONNECTION_OK, (message) => {
 			self.updateStatus(InstanceStatus.Ok, message)
