@@ -173,6 +173,12 @@ GAMMA_NAMES[GAMMA_1_DOT_4] = '1.4'
 GAMMA_NAMES[GAMMA_1_DOT_5] = '1.5'
 GAMMA_NAMES[GAMMA_1_DOT_6] = '1.6'
 
+const FLIP_OFF = '00'
+const FLIP_ON = '01'
+const FLIP_NAMES = []
+FLIP_NAMES[FLIP_OFF] = 'Off'
+FLIP_NAMES[FLIP_ON] = 'On'
+
 class LayerParameters {
 	sourceId
 	hMirror
@@ -204,7 +210,7 @@ class LayerParameters {
 		mosquitoNR: undefined,
 		combingNR: undefined,
 	}
-	invert
+	flip
 }
 
 class DeviceStatus {
@@ -754,6 +760,22 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		}
 	}
 
+	isFlipValid(flipCode) {
+		return flipCode in FLIP_NAMES
+	}
+
+	sendSetFlip(layer, flip) {
+		if (this.isLayerValid(layer)) {
+			if (this.isFlipValid(flip)) {
+				this.sendCommand('80', '2A', layer, flip, '00')
+			} else {
+				this.myWarn('Wrong flip : ' + flip)
+			}
+		} else {
+			this.myWarn('Wrong layer code: ' + layer)
+		}
+	}
+
 	// this is really spaghetti code, and need refactor in future
 	consumeFeedback(ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4) {
 		let redeableMsg = [ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4].join(' ')
@@ -1069,9 +1091,12 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 								break
 							case '2A':
 							case '2B':
-								this.emitConnectionStatusOK()
-								layer.invert = value
-								return this.logFeedback(redeableMsg, onLayerMsgPart + ' invert is: ' + value)
+								if (this.isFlipValid(DAT3)) {
+									this.emitConnectionStatusOK()
+									layer.flip = value
+									return this.logFeedback(redeableMsg, onLayerMsgPart + ' flip/invert is: ' + DAT3)
+								}
+								break
 						}
 					}
 				}
@@ -1158,3 +1183,6 @@ module.exports.GAMMA_NAMES = GAMMA_NAMES
 module.exports.GAMMA_1_DOT_0 = GAMMA_1_DOT_0
 module.exports.GAMMA_OFF = GAMMA_OFF
 module.exports.GAMMA_1_DOT_6 = GAMMA_1_DOT_6
+
+module.exports.FLIP_NAMES = FLIP_NAMES
+module.exports.FLIP_ON = FLIP_ON

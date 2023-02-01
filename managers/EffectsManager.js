@@ -17,6 +17,8 @@ const {
 	GAMMA_1_DOT_0,
 	GAMMA_OFF,
 	GAMMA_1_DOT_6,
+	FLIP_NAMES,
+	FLIP_ON,
 } = require('../rgblink_vsp628pro_connector')
 
 const LAYER_NAMES_CHOICES = []
@@ -77,6 +79,14 @@ for (let id in EFFECT_NAMES) {
 	})
 }
 
+// const COLOR_TEMP_CHOICES = []
+// for (let id in COLOR_TEMP_NAMES) {
+// 	COLOR_TEMP_CHOICES.push({
+// 		id: id,
+// 		label: COLOR_TEMP_NAMES[id],
+// 	})
+// }
+
 const COLOR_TEMP_CHOICES = []
 for (let id in COLOR_TEMP_NAMES) {
 	COLOR_TEMP_CHOICES.push({
@@ -90,6 +100,14 @@ for (let id in GAMMA_NAMES) {
 	GAMMA_CHOICES.push({
 		id: id,
 		label: GAMMA_NAMES[id],
+	})
+}
+
+const FLIP_CHOICES = []
+for (let id in FLIP_NAMES) {
+	FLIP_CHOICES.push({
+		id: id,
+		label: FLIP_NAMES[id],
 	})
 }
 
@@ -217,6 +235,16 @@ class EffectsManager {
 						return options.effect.includes('noise')
 					},
 				},
+				{
+					id: 'flip',
+					type: 'dropdown',
+					label: 'On or Off',
+					choices: FLIP_CHOICES,
+					default: FLIP_ON,
+					isVisible: function (options = new CompanionOptionValues()) {
+						return options.effect.includes('flip')
+					},
+				},
 			],
 			callback: async (event) => {
 				try {
@@ -269,6 +297,8 @@ class EffectsManager {
 				return this.getApiConnector().sendSetNoiseReductionMosquito(layer, event.options.noiseNr)
 			case EFFECT_NOISE_REDUCTION_COMBING_NR:
 				return this.getApiConnector().sendSetNoiseReductionCombing(layer, event.options.noiseNr)
+			case EFFECT_FLIP_INVERT:
+				return this.getApiConnector().sendSetFlip(layer, event.options.flip)
 		}
 		this.myModule.log(
 			'warn',
@@ -390,6 +420,16 @@ class EffectsManager {
 						return options.effect.includes('noise')
 					},
 				},
+				{
+					id: 'flip',
+					type: 'dropdown',
+					label: 'On or Off',
+					choices: FLIP_CHOICES,
+					default: FLIP_ON,
+					isVisible: function (options = new CompanionOptionValues()) {
+						return options.effect.includes('flip')
+					},
+				},
 			],
 			callback: (feedback) => {
 				return this.checkFeedback(feedback)
@@ -446,6 +486,8 @@ class EffectsManager {
 				return layerStatus.noiseReduction.mosquitoNR == feedback.options.noiseNr
 			case EFFECT_NOISE_REDUCTION_COMBING_NR:
 				return layerStatus.noiseReduction.combingNR == feedback.options.noiseNr
+			case EFFECT_FLIP_INVERT:
+				return layerStatus.flip == feedback.options.flip
 		}
 		this.myModule.log(
 			'warn',
@@ -769,6 +811,40 @@ class EffectsManager {
 						],
 					})
 				}
+			}
+		}
+
+		{
+			for (let flipCode in FLIP_NAMES) {
+				presets.push({
+					type: 'button',
+					category: PRESETS_CATEGORY_NAME,
+					name: 'Flip\\n' + FLIP_NAMES[flipCode], // A name for the preset. Shown to the user when they hover over it
+					style: {
+						text: 'Flip\\n' + FLIP_NAMES[flipCode],
+						size: 'auto',
+						color: colorsSingle.WHITE,
+						bgcolor: colorsSingle.BLACK,
+					},
+					steps: [
+						{
+							down: [
+								{
+									actionId: ACTION_SET_EFFECT,
+									options: { layer: LAYER_A, effect: EFFECT_FLIP_INVERT, flip: flipCode },
+								},
+							],
+							up: [],
+						},
+					],
+					feedbacks: [
+						{
+							feedbackId: FEEDBACK_SELECTED_EFFECT,
+							options: { layer: LAYER_A, effect: EFFECT_FLIP_INVERT, flip: flipCode },
+							style: colorsStyle.GREEN_BACKGROUND_WITH_WHITE_TEXT,
+						},
+					],
+				})
 			}
 		}
 
