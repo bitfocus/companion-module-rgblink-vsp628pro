@@ -3,7 +3,13 @@ const ACTION_SET_FREEZE_STATUS = 'set_freeze_status'
 const FEEDBACK_FREEZE_STATUS = 'feedback_freeze_status'
 
 const { colorsStyle, colorsSingle } = require('./colors')
-const { RGBLinkVSP628ProConnector, FREEZE_NAMES, FREEZE_STATUS_FREEZE } = require('../api/rgblink_vsp628pro_connector')
+const {
+	RGBLinkVSP628ProConnector,
+	FREEZE_NAMES,
+	FREEZE_STATUS_FREEZE,
+	DeviceStateChanged,
+	DeviceChangeEventType,
+} = require('../api/rgblink_vsp628pro_connector')
 
 const FREEZE_NAMES_CHOICES = []
 for (let id in FREEZE_NAMES) {
@@ -11,6 +17,11 @@ for (let id in FREEZE_NAMES) {
 		id: id,
 		label: FREEZE_NAMES[id],
 	})
+}
+
+const Variables = {
+	FREEZE_CODE: 'freezeCode',
+	FREEZE_NAME: 'freezeName',
 }
 
 class FreezeManager {
@@ -49,8 +60,13 @@ class FreezeManager {
 		return actions
 	}
 
-	getFeedbacksNames() {
-		return [FEEDBACK_FREEZE_STATUS]
+	getFeedbacksNames(changedEvent = new DeviceStateChanged()) {
+		//return [FEEDBACK_FREEZE_STATUS]
+		switch (changedEvent.event) {
+			case DeviceChangeEventType.FREEZE_STATUS_CHANGED:
+				return [FEEDBACK_FREEZE_STATUS]
+		}
+		return []
 	}
 
 	getFeedbacks() {
@@ -71,7 +87,7 @@ class FreezeManager {
 				},
 			],
 			callback: (feedback) => {
-				return this.getApiConnector().deviceStatus.freezeStatus == feedback.options.status
+				return this.getApiConnector().deviceStatus.getFreezeStatus() == feedback.options.status
 			},
 		}
 		return feedbacks
@@ -117,12 +133,26 @@ class FreezeManager {
 
 	getVariablesDefinitions() {
 		let variables = []
-
+		variables.push({
+			variableId: Variables.FREEZE_CODE,
+			name: 'Freeze code',
+		})
+		variables.push({
+			variableId: Variables.FREEZE_NAME,
+			name: 'Freeze name',
+		})
 		return variables
 	}
 
-	getVariableValueForUpdate(/*changedEvent = new DeviceStateChanged()*/) {
-		return {}
+	getVariableValueForUpdate(changedEvent = new DeviceStateChanged()) {
+		let retObj = {}
+		switch (changedEvent.event) {
+			case DeviceChangeEventType.FREEZE_STATUS_CHANGED:
+				retObj[Variables.FREEZE_CODE] = changedEvent.newValue
+				retObj[Variables.FREEZE_NAME] = FREEZE_NAMES[changedEvent.newValue]
+				break
+		}
+		return retObj
 	}
 }
 

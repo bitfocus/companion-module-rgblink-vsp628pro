@@ -328,6 +328,21 @@ class DeviceStatus {
 			return new DeviceStateChanged(DeviceChangeEventType.OUTPUT_RESOLUTION_2, resolutionCode)
 		}
 	}
+
+	isFreezeStatusValid(freezeStatus) {
+		return freezeStatus in FREEZE_NAMES
+	}
+
+	getFreezeStatus() {
+		return this.freezeStatus
+	}
+
+	setFreezeStatus(status) {
+		if (this.isFreezeStatusValid(status) && this.freezeStatus != status) {
+			this.freezeStatus = status
+			return new DeviceStateChanged(DeviceChangeEventType.FREEZE_STATUS_CHANGED, status)
+		}
+	}
 }
 
 class DeviceStateChanged {
@@ -348,6 +363,7 @@ const DeviceChangeEventType = {
 	LAYER_CHANGED: 'LAYER_CHANGED',
 	OUTPUT_RESOLUTION_1: 'OUTPUT_RESOLUTION_1',
 	OUTPUT_RESOLUTION_2: 'OUTPUT_RESOLUTION_2',
+	FREEZE_STATUS_CHANGED: 'FREEZE_STATUS_CHANGED',
 }
 
 class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
@@ -557,14 +573,17 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 	}
 
 	isFreezeStatusValid(freezeStatus) {
-		return freezeStatus in FREEZE_NAMES
+		//return freezeStatus in FREEZE_NAMES
+		let valid = this.deviceStatus.isFreezeStatusValid(freezeStatus)
+		if (!valid) {
+			this.myWarn('Wrong freeze/live status code: ' + freezeStatus)
+		}
+		return valid
 	}
 
 	sendSetFreezeStatus(freezeStatus) {
 		if (this.isFreezeStatusValid(freezeStatus)) {
 			this.sendCommand('75', '00', '01' /*???*/, freezeStatus, '00')
-		} else {
-			this.myWarn('Wrong freezeStatus code: ' + freezeStatus)
 		}
 	}
 
@@ -932,8 +951,8 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 						// why DAT2 == '01'? id ont know
 						if (this.isFreezeStatusValid(DAT3)) {
 							this.emitConnectionStatusOK()
-							this.deviceStatus.freezeStatus = DAT3
-							return this.logFeedback(redeableMsg, 'Freeze status: ' + FREEZE_NAMES[this.deviceStatus.freezeStatus])
+							this.logFeedback(redeableMsg, 'Freeze status: ' + FREEZE_NAMES[DAT3])
+							return this.deviceStatus.setFreezeStatus(DAT3)
 						}
 					}
 				} else if (DAT1 == '14' || DAT1 == '15') {
