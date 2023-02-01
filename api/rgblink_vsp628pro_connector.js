@@ -302,6 +302,32 @@ class DeviceStatus {
 			return new DeviceStateChanged(DeviceChangeEventType.LAYER_CHANGED, layerCode)
 		}
 	}
+
+	isResolutionValid(resolutionCode) {
+		return resolutionCode in OUTPUT_RESOLUTIONS_NAMES
+	}
+
+	getOutputResolution1() {
+		return this.output.resolution1
+	}
+
+	getOutputResolution2() {
+		return this.output.resolution2
+	}
+
+	setOutputResolution1(resolutionCode) {
+		if (this.isResolutionValid(resolutionCode) && this.output.resolution1 != resolutionCode) {
+			this.output.resolution1 = resolutionCode
+			return new DeviceStateChanged(DeviceChangeEventType.OUTPUT_RESOLUTION_1, resolutionCode)
+		}
+	}
+
+	setOutputResolution2(resolutionCode) {
+		if (this.isResolutionValid(resolutionCode) && this.output.resolution2 != resolutionCode) {
+			this.output.resolution2 = resolutionCode
+			return new DeviceStateChanged(DeviceChangeEventType.OUTPUT_RESOLUTION_2, resolutionCode)
+		}
+	}
 }
 
 class DeviceStateChanged {
@@ -320,6 +346,8 @@ const DeviceChangeEventType = {
 	FLASH_LAST_SAVED_BANK: 'FLASH_LAST_SAVED_BANK',
 	SYSTEM_MODE_CHANGED: 'SYSTEM_MODE_CHANGED',
 	LAYER_CHANGED: 'LAYER_CHANGED',
+	OUTPUT_RESOLUTION_1: 'OUTPUT_RESOLUTION_1',
+	OUTPUT_RESOLUTION_2: 'OUTPUT_RESOLUTION_2',
 }
 
 class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
@@ -479,7 +507,11 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		}
 	}
 	isLayerValid(layer) {
-		return this.deviceStatus.isLayerValid(layer)
+		let valid = this.deviceStatus.isLayerValid(layer)
+		if (!valid) {
+			this.myWarn('Wrong layer code: ' + layer)
+		}
+		return valid
 	}
 
 	sendSourceSignalOnLayer(sourceSignal, layer) {
@@ -503,20 +535,20 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 			} else {
 				this.myWarn('Wrong output id: ' + output)
 			}
-		} else {
-			this.myWarn('Wrong resolution: ' + resolution)
 		}
 	}
 
 	isResolutionValid(resolutionCode) {
-		return resolutionCode in OUTPUT_RESOLUTIONS_NAMES
+		let valid = this.deviceStatus.isResolutionValid(resolutionCode)
+		if (!valid) {
+			this.myWarn('Wrong resolution code: ' + resolutionCode)
+		}
+		return valid
 	}
 
 	getResolutionName(resolutionCode) {
 		if (this.isResolutionValid(resolutionCode)) {
 			return OUTPUT_RESOLUTIONS_NAMES[resolutionCode]
-		} else {
-			this.myWarn('Wrong resolution code: ' + resolutionCode)
 		}
 	}
 
@@ -885,12 +917,12 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 					if (this.isResolutionValid(readedResolution))
 						if (DAT2 == '00') {
 							this.emitConnectionStatusOK()
-							this.deviceStatus.output.resolution1 = readedResolution
-							return this.logFeedback(redeableMsg, 'Output resolution 1: ' + this.getResolutionName(readedResolution))
+							this.logFeedback(redeableMsg, 'Output resolution 1: ' + this.getResolutionName(readedResolution))
+							return this.deviceStatus.setOutputResolution1(readedResolution)
 						} else if (DAT2 == '01') {
 							this.emitConnectionStatusOK()
-							this.deviceStatus.output.resolution2 = readedResolution
-							return this.logFeedback(redeableMsg, 'Output resolution 2: ' + this.getResolutionName(readedResolution))
+							this.logFeedback(redeableMsg, 'Output resolution 2: ' + this.getResolutionName(readedResolution))
+							return this.deviceStatus.setOutputResolution2(readedResolution)
 						}
 				}
 			} else if (CMD == '75') {

@@ -1,7 +1,3 @@
-const ACTION_SET_OUTPUT_RESOLUTION = 'set_output_resolution'
-
-const FEEDBACK_OUTPUT_RESOLUTION = 'feedback_output_resolution'
-
 const { colorsStyle, colorsSingle } = require('./colors')
 const {
 	RGBLinkVSP628ProConnector,
@@ -10,7 +6,13 @@ const {
 	OUTPUT_NAMES,
 	OUTPUT1,
 	OUTPUT2,
+	DeviceStateChanged,
+	DeviceChangeEventType,
 } = require('../api/rgblink_vsp628pro_connector')
+
+const ACTION_SET_OUTPUT_RESOLUTION = 'set_output_resolution'
+
+const FEEDBACK_OUTPUT_RESOLUTION = 'feedback_output_resolution'
 
 const RESOLUTION_NAMES_CHOICES = []
 for (let id in OUTPUT_RESOLUTIONS_NAMES) {
@@ -26,6 +28,13 @@ for (let id in OUTPUT_NAMES) {
 		id: id,
 		label: OUTPUT_NAMES[id],
 	})
+}
+
+const Variables = {
+	OUTPUT_1_RESOLUTION_CODE: 'output1ResolutionCode',
+	OUTPUT_1_RESOLUTION_NAME: 'output1ResolutionName',
+	OUTPUT_2_RESOLUTION_CODE: 'output2ResolutionCode',
+	OUTPUT_2_RESOLUTION_NAME: 'output2ResolutionName',
 }
 
 class OutputResolutionManager {
@@ -76,8 +85,13 @@ class OutputResolutionManager {
 		return actions
 	}
 
-	getFeedbacksNames() {
-		return [FEEDBACK_OUTPUT_RESOLUTION]
+	getFeedbacksNames(changedEvent = new DeviceStateChanged()) {
+		switch (changedEvent.event) {
+			case DeviceChangeEventType.OUTPUT_RESOLUTION_1:
+			case DeviceChangeEventType.OUTPUT_RESOLUTION_2:
+				return [FEEDBACK_OUTPUT_RESOLUTION]
+		}
+		return []
 	}
 
 	getFeedbacks() {
@@ -107,9 +121,9 @@ class OutputResolutionManager {
 			],
 			callback: (feedback) => {
 				if (feedback.options.output == OUTPUT1) {
-					return this.getApiConnector().deviceStatus.output.resolution1 == feedback.options.resolution
+					return this.getApiConnector().deviceStatus.getOutputResolution1() == feedback.options.resolution
 				} else if (feedback.options.output == OUTPUT2) {
-					return this.getApiConnector().deviceStatus.output.resolution2 == feedback.options.resolution
+					return this.getApiConnector().deviceStatus.getOutputResolution2() == feedback.options.resolution
 				} else {
 					this.myModule.log('warn', 'Bad output configured? This must be fixed by developer...')
 					return false
@@ -159,12 +173,38 @@ class OutputResolutionManager {
 
 	getVariablesDefinitions() {
 		let variables = []
-
+		variables.push({
+			variableId: Variables.OUTPUT_1_RESOLUTION_CODE,
+			name: 'Resolution on output 1 - code',
+		})
+		variables.push({
+			variableId: Variables.OUTPUT_1_RESOLUTION_NAME,
+			name: 'Resolution on output 1 - name',
+		})
+		variables.push({
+			variableId: Variables.OUTPUT_2_RESOLUTION_CODE,
+			name: 'Resolution on output 2 - code',
+		})
+		variables.push({
+			variableId: Variables.OUTPUT_2_RESOLUTION_NAME,
+			name: 'Resolution on output 2 - name',
+		})
 		return variables
 	}
 
-	getVariableValueForUpdate(/*changedEvent = new DeviceStateChanged()*/) {
-		return {}
+	getVariableValueForUpdate(changedEvent = new DeviceStateChanged()) {
+		let retObj = {}
+		switch (changedEvent.event) {
+			case DeviceChangeEventType.OUTPUT_RESOLUTION_1:
+				retObj[Variables.OUTPUT_1_RESOLUTION_CODE] = changedEvent.newValue
+				retObj[Variables.OUTPUT_1_RESOLUTION_NAME] = OUTPUT_RESOLUTIONS_NAMES[changedEvent.newValue]
+				break
+			case DeviceChangeEventType.OUTPUT_RESOLUTION_2:
+				retObj[Variables.OUTPUT_2_RESOLUTION_CODE] = changedEvent.newValue
+				retObj[Variables.OUTPUT_2_RESOLUTION_NAME] = OUTPUT_RESOLUTIONS_NAMES[changedEvent.newValue]
+				break
+		}
+		return retObj
 	}
 }
 
