@@ -13,6 +13,10 @@ const {
 	LayerParameters,
 	COLOR_TEMP_NAMES,
 	COLOR_TEMP_6500,
+	GAMMA_NAMES,
+	GAMMA_1_DOT_0,
+	GAMMA_OFF,
+	GAMMA_1_DOT_6,
 } = require('../rgblink_vsp628pro_connector')
 
 const LAYER_NAMES_CHOICES = []
@@ -78,6 +82,14 @@ for (let id in COLOR_TEMP_NAMES) {
 	COLOR_TEMP_CHOICES.push({
 		id: id,
 		label: COLOR_TEMP_NAMES[id],
+	})
+}
+
+const GAMMA_CHOICES = []
+for (let id in GAMMA_NAMES) {
+	GAMMA_CHOICES.push({
+		id: id,
+		label: GAMMA_NAMES[id],
 	})
 }
 
@@ -173,9 +185,23 @@ class EffectsManager {
 						return options.effect.includes('color')
 					},
 				},
+				{
+					id: 'gamma',
+					type: 'dropdown',
+					label: 'Gamma',
+					choices: GAMMA_CHOICES,
+					default: GAMMA_1_DOT_0,
+					isVisible: function (options = new CompanionOptionValues()) {
+						return options.effect.includes('gamma')
+					},
+				},
 			],
 			callback: async (event) => {
-				self.doAction(event)
+				try {
+					self.doAction(event)
+				} catch (ex) {
+					console.log(ex)
+				}
 			},
 		}
 
@@ -203,6 +229,8 @@ class EffectsManager {
 				return this.getApiConnector().sendSetHue(layer, event.options.hue)
 			case EFFECT_COLOR_TEMPERATURE:
 				return this.getApiConnector().sendSetColorTemperature(layer, event.options.color)
+			case EFFECT_GAMMA:
+				return this.getApiConnector().sendSetGamma(layer, event.options.gamma)
 		}
 		this.myModule.log(
 			'warn',
@@ -292,6 +320,16 @@ class EffectsManager {
 						return options.effect.includes('color')
 					},
 				},
+				{
+					id: 'gamma',
+					type: 'dropdown',
+					label: 'Gamma',
+					choices: GAMMA_CHOICES,
+					default: GAMMA_1_DOT_0,
+					isVisible: function (options = new CompanionOptionValues()) {
+						return options.effect.includes('gamma')
+					},
+				},
 			],
 			callback: (feedback) => {
 				return this.checkFeedback(feedback)
@@ -330,6 +368,8 @@ class EffectsManager {
 				return layerStatus.hue == feedback.options.hue
 			case EFFECT_COLOR_TEMPERATURE:
 				return layerStatus.colorTemperature == feedback.options.color
+			case EFFECT_GAMMA:
+				return layerStatus.gamma == feedback.options.gamma
 		}
 		this.myModule.log(
 			'warn',
@@ -525,6 +565,42 @@ class EffectsManager {
 						{
 							feedbackId: FEEDBACK_SELECTED_EFFECT,
 							options: { layer: LAYER_A, effect: EFFECT_COLOR_TEMPERATURE, color: color },
+							style: colorsStyle.GREEN_BACKGROUND_WITH_WHITE_TEXT,
+						},
+					],
+				})
+			}
+		}
+
+		{
+			let gammaValues = [GAMMA_OFF, GAMMA_1_DOT_0, GAMMA_1_DOT_6]
+			for (let gammaIdx in gammaValues) {
+				let gamma = gammaValues[gammaIdx]
+				presets.push({
+					type: 'button',
+					category: PRESETS_CATEGORY_NAME,
+					name: 'Gamma\\n' + GAMMA_NAMES[gamma], // A name for the preset. Shown to the user when they hover over it
+					style: {
+						text: 'Gamma\\n' + GAMMA_NAMES[gamma],
+						size: 'auto',
+						color: colorsSingle.WHITE,
+						bgcolor: colorsSingle.BLACK,
+					},
+					steps: [
+						{
+							down: [
+								{
+									actionId: ACTION_SET_EFFECT,
+									options: { layer: LAYER_A, effect: EFFECT_GAMMA, gamma: gamma },
+								},
+							],
+							up: [],
+						},
+					],
+					feedbacks: [
+						{
+							feedbackId: FEEDBACK_SELECTED_EFFECT,
+							options: { layer: LAYER_A, effect: EFFECT_GAMMA, gamma: gamma },
 							style: colorsStyle.GREEN_BACKGROUND_WITH_WHITE_TEXT,
 						},
 					],

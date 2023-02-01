@@ -155,6 +155,24 @@ COLOR_TEMP_NAMES[COLOR_TEMP_3200] = '3200K'
 COLOR_TEMP_NAMES[COLOR_TEMP_6500] = '6500K'
 COLOR_TEMP_NAMES[COLOR_TEMP_9300] = '9300K'
 
+const GAMMA_OFF = '00'
+const GAMMA_1_DOT_0 = '01'
+const GAMMA_1_DOT_1 = '02'
+const GAMMA_1_DOT_2 = '03'
+const GAMMA_1_DOT_3 = '04'
+const GAMMA_1_DOT_4 = '05'
+const GAMMA_1_DOT_5 = '06'
+const GAMMA_1_DOT_6 = '07'
+const GAMMA_NAMES = []
+GAMMA_NAMES[GAMMA_OFF] = 'OFF'
+GAMMA_NAMES[GAMMA_1_DOT_0] = '1.0'
+GAMMA_NAMES[GAMMA_1_DOT_1] = '1.1'
+GAMMA_NAMES[GAMMA_1_DOT_2] = '1.2'
+GAMMA_NAMES[GAMMA_1_DOT_3] = '1.3'
+GAMMA_NAMES[GAMMA_1_DOT_4] = '1.4'
+GAMMA_NAMES[GAMMA_1_DOT_5] = '1.5'
+GAMMA_NAMES[GAMMA_1_DOT_6] = '1.6'
+
 class LayerParameters {
 	sourceId
 	hMirror
@@ -614,6 +632,22 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 		}
 	}
 
+	isGammaValid(gammaCode) {
+		return gammaCode in GAMMA_NAMES
+	}
+
+	sendSetGamma(layer, gammaCode) {
+		if (this.isLayerValid(layer)) {
+			if (this.isGammaValid(gammaCode)) {
+				this.sendCommand('80', '1A', layer, gammaCode, '00')
+			} else {
+				this.myWarn('Wrong gamma code : ' + gammaCode)
+			}
+		} else {
+			this.myWarn('Wrong layer code: ' + layer)
+		}
+	}
+
 	// this is really spaghetti code, and need refactor in future
 	consumeFeedback(ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4) {
 		let redeableMsg = [ADDR, SN, CMD, DAT1, DAT2, DAT3, DAT4].join(' ')
@@ -857,9 +891,12 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 								break
 							case '1A':
 							case '1B':
-								this.emitConnectionStatusOK()
-								layer.gamma = value
-								return this.logFeedback(redeableMsg, onLayerMsgPart + ' gamma is: ' + value)
+								if (this.isGammaValid(DAT3)) {
+									this.emitConnectionStatusOK()
+									layer.gamma = DAT3
+									return this.logFeedback(redeableMsg, onLayerMsgPart + ' gamma is: ' + GAMMA_NAMES[DAT3])
+								}
+								break
 							case '0A':
 							case '0B':
 								this.emitConnectionStatusOK()
@@ -986,3 +1023,8 @@ module.exports.ROTATE_90_LEFT = ROTATE_90_LEFT
 
 module.exports.COLOR_TEMP_NAMES = COLOR_TEMP_NAMES
 module.exports.COLOR_TEMP_6500 = COLOR_TEMP_6500
+
+module.exports.GAMMA_NAMES = GAMMA_NAMES
+module.exports.GAMMA_1_DOT_0 = GAMMA_1_DOT_0
+module.exports.GAMMA_OFF = GAMMA_OFF
+module.exports.GAMMA_1_DOT_6 = GAMMA_1_DOT_6
