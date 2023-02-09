@@ -371,8 +371,8 @@ class RGBLinkVSP628ProConnector extends RGBLinkApiConnector {
 
 	deviceStatus = new DeviceStatus()
 
-	constructor(host, port, polling) {
-		super(host, port, polling)
+	constructor(/*ApiConfig*/ config) {
+		super(config)
 		var self = this
 
 		this.on(this.EVENT_NAME_ON_DATA_API_NOT_STANDARD_LENGTH, (message) => {
